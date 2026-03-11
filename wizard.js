@@ -143,13 +143,10 @@ function answer(isYes) {
     renderWizard();
 
     const wizardView = document.getElementById('wizardView');
-    if (wizardView) {
-        wizardView.scrollTop = 0;
-    }
+    if (wizardView) wizardView.scrollTop = 0;
+
     const contentArea = document.querySelector('.content-area');
-    if (contentArea) {
-        contentArea.scrollTop = 0;
-    }
+    if (contentArea) contentArea.scrollTop = 0;
 }
 
 function goBack() {
@@ -167,13 +164,10 @@ function goBack() {
         renderWizard();
 
         const wizardView = document.getElementById('wizardView');
-        if (wizardView) {
-            wizardView.scrollTop = 0;
-        }
+        if (wizardView) wizardView.scrollTop = 0;
+
         const contentArea = document.querySelector('.content-area');
-        if (contentArea) {
-            contentArea.scrollTop = 0;
-        }
+        if (contentArea) contentArea.scrollTop = 0;
     }
 }
 
