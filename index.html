@@ -15,19 +15,22 @@
                     <img id="headerIconImg" class="hidden" src="" alt="">
                     <span class="edit-badge">UPRAVIT</span>
                 </div>
+
                 <div class="header-info">
                     <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
                     <button class="contact-btn-main" onclick="openContactModal()">
                         <span id="contactBtnText">👤</span>
                         <img id="contactBtnImg" class="hidden" src="" alt="">
-                        <span>CaravanTechniker</span>
+                        <span>Caravan Techniker am Main</span>
                     </button>
                 </div>
+
                 <div class="header-controls">
                     <button class="admin-btn" onclick="toggleAdmin()">
                         <span>⚙️</span>
                         <span>Admin</span>
                     </button>
+
                     <button class="lang-btn" onclick="openLangModal()">
                         <img id="currentLangFlagImg" src="https://flagcdn.com/w40/de.png" alt="DE" style="width: 20px; height: 15px; border-radius: 3px; object-fit: cover;">
                         <span id="currentLangCode">DE</span>
@@ -45,25 +48,30 @@
                     <span class="icon">🔧</span>
                     <span>Diagnostika</span>
                 </button>
+
                 <button class="menu-btn" onclick="showSection('errorcodes')" data-section="errorcodes">
                     <span class="icon">⚠️</span>
                     <span>Chyby</span>
                 </button>
+
                 <button class="menu-btn" onclick="showSection('devices')" data-section="devices">
                     <span class="icon">📟</span>
                     <span>Zariadenia</span>
                 </button>
+
                 <button class="menu-btn" onclick="showSection('measurements')" data-section="measurements">
                     <span class="icon">📊</span>
                     <span>Merania</span>
                 </button>
+
                 <button class="menu-btn" onclick="showSection('ebl')" data-section="ebl">
                     <span class="icon">⚡</span>
                     <span>EBL</span>
                 </button>
-                <button class="menu-btn" onclick="openLangModal()">
-                    <span class="icon">🌍</span>
-                    <span>Jazyk</span>
+
+                <button class="menu-btn" onclick="openManualsModal()">
+                    <span class="icon">📚</span>
+                    <span>Manuály</span>
                 </button>
             </div>
 
@@ -107,18 +115,20 @@
                 </div>
 
                 <div id="wizardView" class="wizard hidden">
-                    <div class="breadcrumb" style="text-align: left; margin-bottom: 15px; flex-shrink: 0;">
+                    <div class="breadcrumb wizard-breadcrumb">
                         <a href="#" onclick="showCategories()">Diagnostika</a>
                         <span>›</span>
                         <a href="#" onclick="showDiagnoses(currentCategory)"><span id="wizardCategoryName"></span></a>
                         <span>›</span>
                         <span id="wizardDiagnosisName"></span>
                     </div>
+
                     <div id="pathHistory" class="path-history hidden">
                         <div class="path-title" data-translate="currentPath">DOTERAJŠIA CESTA</div>
                         <div id="pathContent"></div>
                     </div>
-                    <div id="wizardContent" style="flex: 1; display: flex; flex-direction: column;"></div>
+
+                    <div id="wizardContent" class="wizard-content"></div>
                 </div>
 
                 <div id="editorView" class="editor hidden">
@@ -193,13 +203,16 @@
                         <span id="contactModalText">👤</span>
                         <img id="contactModalImg" class="hidden" src="" alt="">
                     </div>
+
                     <div class="contact-name">Stanislav Drozd</div>
-                    <div class="contact-role">CaravanTechniker am Main</div>
+                    <div class="contact-role">Caravan Techniker am Main</div>
+
                     <div class="contact-warning" id="contactWarningBox">
                         <div class="contact-warning-icon">🛑</div>
                         <div class="contact-warning-text" id="contactWarningTitle">NEVOLAJTE MI</div>
                         <div class="contact-warning-subtext" id="contactWarningSubtext">Som pracovne vyťažený a telefón nedvíham</div>
                     </div>
+
                     <div class="contact-actions">
                         <button class="contact-action-btn whatsapp-action" onclick="openWhatsApp()">
                             <span>💬</span> WhatsApp
@@ -208,9 +221,11 @@
                             <span>📱</span> SMS
                         </button>
                     </div>
+
                     <div class="contact-notice" id="contactNotice">
                         <strong>⚠️ Dôležité:</strong> Telefonické hovory neprijímam. Iba písomné, alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.
                     </div>
+
                     <button class="btn-secondary" onclick="closeContactModal()" id="closeContactBtn">Zavrieť</button>
                 </div>
             </div>
@@ -219,7 +234,7 @@
         <div id="langModal" class="modal-overlay" onclick="closeModal(event)">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">🌍 Jazyk</div>
+                    <div class="modal-title">🌍 Jazyk / Manuály</div>
                     <button class="modal-close" onclick="closeLangModal()">×</button>
                 </div>
                 <div id="langOptions"></div>
@@ -282,6 +297,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="importTreeStep" class="hidden">
                     <div class="import-action-box">
                         <div class="import-action-title">Akcia:</div>
@@ -309,6 +325,7 @@
                     </button>
                     <button class="btn-secondary" onclick="backToImportStep1()" style="margin-top: 10px;">Späť</button>
                 </div>
+
                 <div id="importErrorStep" class="hidden">
                     <div style="font-weight: 600; margin-bottom: 12px; color: #374151; font-size: 0.95em;">Značka:</div>
                     <div class="brand-grid" id="brandGrid"></div>
@@ -386,7 +403,7 @@
 
         <div class="status-bar">
             <span id="adminStatus"></span>
-            <span style="margin-left: 15px;">v5.1</span>
+            <span style="margin-left: 15px;">v5.2</span>
         </div>
     </div>
 
