@@ -154,10 +154,8 @@ function setLanguage(code) {
         renderCategories();
     }
 
-    if (currentCategory) {
-        if (typeof showDiagnoses === 'function') {
-            showDiagnoses(currentCategory);
-        }
+    if (currentCategory && typeof showDiagnoses === 'function') {
+        showDiagnoses(currentCategory);
     }
 
     if (currentDiagnosis && typeof renderWizard === 'function') {
@@ -168,7 +166,7 @@ function setLanguage(code) {
     closeLangModal();
 }
 
-// Príprava na manuály
+// Manuály
 function openManualsModal() {
     const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
@@ -272,9 +270,7 @@ function handlePhotoUpload(event) {
             const cat = appData.categories.find(c => c.id === catId);
             if (cat) {
                 cat.iconPhoto = e.target.result;
-                if (typeof renderCategories === 'function') {
-                    renderCategories();
-                }
+                if (typeof renderCategories === 'function') renderCategories();
             }
         }
         saveDataToStorage();
@@ -300,9 +296,7 @@ function removePhoto() {
         const cat = appData.categories.find(c => c.id === catId);
         if (cat) {
             cat.iconPhoto = null;
-            if (typeof renderCategories === 'function') {
-                renderCategories();
-            }
+            if (typeof renderCategories === 'function') renderCategories();
         }
     }
     saveDataToStorage();
