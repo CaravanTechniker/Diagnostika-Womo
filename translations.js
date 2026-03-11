@@ -133,42 +133,42 @@ const CONTACT_TRANSLATIONS = {
     de: {
         warningTitle: 'BITTE NICHT ANRUFEN',
         warningSubtext: 'Ich bin beruflich stark eingespannt und nehme keine Anrufe entgegen',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Wichtig: Ich nehme keine Telefonanrufe entgegen. Nur schriftliche oder Sprachnachrichten über WhatsApp oder SMS. Danke für Ihr Verständnis.',
         closeBtn: 'Schließen'
     },
     sk: {
         warningTitle: 'NEVOLAJTE MI',
         warningSubtext: 'Som pracovne vyťažený a telefón nedvíham',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Dôležité: Telefonické hovory neprijímam. Iba písomné, alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.',
         closeBtn: 'Zavrieť'
     },
     it: {
         warningTitle: 'NON CHIAMARE',
         warningSubtext: 'Sono impegnato con il lavoro e non rispondo al telefono',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Importante: Non accetto chiamate telefoniche. Solo messaggi scritti o vocali via WhatsApp o SMS. Grazie per la comprensione.',
         closeBtn: 'Chiudi'
     },
     fr: {
         warningTitle: 'NE PAS APPELER',
         warningSubtext: 'Je suis occupé professionnellement et je ne décroche pas',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Important: Je ne prends pas les appels téléphoniques. Uniquement des messages écrits ou vocaux via WhatsApp ou SMS. Merci de votre compréhension.',
         closeBtn: 'Fermer'
     },
     es: {
         warningTitle: 'NO LLAMAR',
         warningSubtext: 'Estoy ocupado con el trabajo y no cojo el teléfono',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Importante: No acepto llamadas telefónicas. Solo mensajes escritos o de voz por WhatsApp o SMS. Gracias por su comprensión.',
         closeBtn: 'Cerrar'
     },
     en: {
         warningTitle: 'DO NOT CALL',
         warningSubtext: 'I am busy with work and do not answer phone calls',
-        smsText: 'WhatsApp / SMS',
+        smsText: 'SMS',
         notice: 'Important: I do not accept phone calls. Only written or voice messages via WhatsApp or SMS. Thank you for your understanding.',
         closeBtn: 'Close'
     }
