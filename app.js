@@ -1,32 +1,16 @@
 // Hlavný aplikačný súbor
 
-// Základná príprava pre manuály
 const MANUALS_DATA = {
-    truma: {
-        name: 'Truma',
-        items: []
-    },
-    alde: {
-        name: 'Alde',
-        items: []
-    },
-    alphatronics: {
-        name: 'Alphatronics',
-        items: []
-    },
-    schaudt: {
-        name: 'Schaudt',
-        items: []
-    },
-    nordelettronica: {
-        name: 'Nordelettronica',
-        items: []
-    },
-    cbe: {
-        name: 'CBE',
-        items: []
-    }
+    truma: { name: 'Truma', items: [] },
+    alde: { name: 'Alde', items: [] },
+    alphatronics: { name: 'Alphatronics', items: [] },
+    schaudt: { name: 'Schaudt', items: [] },
+    nordelettronica: { name: 'Nordelettronica', items: [] },
+    cbe: { name: 'CBE', items: [] }
 };
+
+let adminPressTimer = null;
+let adminLongPressTriggered = false;
 
 // Admin funkcie
 function toggleAdmin() {
@@ -35,6 +19,34 @@ function toggleAdmin() {
     } else {
         openPasswordModal();
     }
+}
+
+function setupHiddenAdminTrigger() {
+    const trigger = document.getElementById('adminTrigger');
+    if (!trigger) return;
+
+    const startPress = (event) => {
+        if (isEditMode || isAdminLoggedIn) return;
+        adminLongPressTriggered = false;
+        adminPressTimer = setTimeout(() => {
+            adminLongPressTriggered = true;
+            openPasswordModal();
+        }, 1200);
+    };
+
+    const endPress = () => {
+        if (adminPressTimer) {
+            clearTimeout(adminPressTimer);
+            adminPressTimer = null;
+        }
+    };
+
+    trigger.addEventListener('mousedown', startPress);
+    trigger.addEventListener('touchstart', startPress, { passive: true });
+    trigger.addEventListener('mouseup', endPress);
+    trigger.addEventListener('mouseleave', endPress);
+    trigger.addEventListener('touchend', endPress);
+    trigger.addEventListener('touchcancel', endPress);
 }
 
 function logoutAdmin() {
@@ -154,12 +166,12 @@ function setLanguage(code) {
         renderCategories();
     }
 
-    if (currentCategory && typeof showDiagnoses === 'function') {
-        showDiagnoses(currentCategory);
-    }
-
     if (currentDiagnosis && typeof renderWizard === 'function') {
         renderWizard();
+    } else if (currentCategory && typeof showDiagnoses === 'function') {
+        showDiagnoses(currentCategory);
+    } else if (typeof showCategories === 'function') {
+        showCategories();
     }
 
     saveDataToStorage();
@@ -221,6 +233,11 @@ function openManualSection(sectionKey) {
 
 // Foto funkcie
 function handleHeaderIconClick() {
+    if (adminLongPressTriggered) {
+        adminLongPressTriggered = false;
+        return;
+    }
+
     if (isEditMode || isAdminLoggedIn) {
         document.getElementById('currentPhotoTarget').value = 'header';
         document.getElementById('photoModal').classList.add('active');
@@ -304,4 +321,7 @@ function removePhoto() {
 }
 
 // Inicializácia
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    setupHiddenAdminTrigger();
+});
