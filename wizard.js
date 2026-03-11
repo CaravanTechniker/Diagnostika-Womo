@@ -10,6 +10,7 @@ function startWizard(diagnosisId) {
     document.getElementById('diagnosesView').classList.add('hidden');
     document.getElementById('errorCodesView').classList.add('hidden');
     document.getElementById('wizardView').classList.remove('hidden');
+    document.body.classList.add('wizard-active');
 
     document.getElementById('wizardCategoryName').textContent = cat.translations[lang]?.name || cat.translations['de'].name;
     document.getElementById('wizardDiagnosisName').textContent = dt.title;
@@ -28,7 +29,6 @@ function renderWizard() {
 
     const content = document.getElementById('wizardContent');
 
-    // Horný blok cesty úplne vypneme
     const pathHistoryBox = document.getElementById('pathHistory');
     if (pathHistoryBox) {
         pathHistoryBox.classList.add('hidden');
