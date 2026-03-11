@@ -38,25 +38,29 @@ function updateLanguage() {
     
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.placeholder = t.search || 'Hľadať...';
+
+    if (!document.getElementById('categoriesView').classList.contains('hidden')) {
+        renderCategories();
+    }
 }
 
 function getUiText(key) {
     const lang = appData.currentLang;
     const map = {
         noTrees: {
-            sk: 'Žiadne stromy v tejto kategórii',
-            de: 'Keine Bäume in dieser Kategorie',
-            en: 'No trees in this category',
-            it: 'Nessun albero in questa categoria',
-            fr: 'Aucun arbre dans cette catégorie',
-            es: 'No hay árboles en esta categoría'
+            sk: 'Žiadne diagnostické postupy v tejto kategórii',
+            de: 'Keine Diagnoseablaeufe in dieser Kategorie',
+            en: 'No diagnostic procedures in this category',
+            it: 'Nessuna procedura diagnostica in questa categoria',
+            fr: 'Aucune procedure de diagnostic dans cette categorie',
+            es: 'No hay procedimientos de diagnostico en esta categoria'
         },
         noResults: {
             sk: 'Žiadne výsledky',
             de: 'Keine Ergebnisse',
             en: 'No results',
             it: 'Nessun risultato',
-            fr: 'Aucun résultat',
+            fr: 'Aucun resultat',
             es: 'Sin resultados'
         },
         searchResults: {
@@ -64,8 +68,8 @@ function getUiText(key) {
             de: 'Suchergebnisse',
             en: 'Search results',
             it: 'Risultati della ricerca',
-            fr: 'Résultats de recherche',
-            es: 'Resultados de búsqueda'
+            fr: 'Resultats de recherche',
+            es: 'Resultados de busqueda'
         },
         searchErrorCode: {
             sk: 'Vyhľadať chybový kód',
@@ -73,7 +77,7 @@ function getUiText(key) {
             en: 'Search error code',
             it: 'Cerca codice errore',
             fr: 'Rechercher un code erreur',
-            es: 'Buscar código de error'
+            es: 'Buscar codigo de error'
         },
         enterCode: {
             sk: 'Zadajte kód napr E212H',
@@ -81,7 +85,7 @@ function getUiText(key) {
             en: 'Enter code e.g. E212H',
             it: 'Inserisci codice es E212H',
             fr: 'Entrez le code ex E212H',
-            es: 'Introduzca el código p ej E212H'
+            es: 'Introduzca el codigo p ej E212H'
         },
         searchButton: {
             sk: 'Vyhľadať',
@@ -97,11 +101,11 @@ function getUiText(key) {
             en: 'Code not found',
             it: 'Codice non trovato',
             fr: 'Code introuvable',
-            es: 'Código no encontrado'
+            es: 'Codigo no encontrado'
         },
         device: {
             sk: 'Zariadenie',
-            de: 'Gerät',
+            de: 'Geraet',
             en: 'Device',
             it: 'Dispositivo',
             fr: 'Appareil',
@@ -113,22 +117,22 @@ function getUiText(key) {
             en: 'Description',
             it: 'Descrizione',
             fr: 'Description',
-            es: 'Descripción'
+            es: 'Descripcion'
         },
         solution: {
             sk: 'Riešenie',
-            de: 'Lösung',
+            de: 'Loesung',
             en: 'Solution',
             it: 'Soluzione',
             fr: 'Solution',
-            es: 'Solución'
+            es: 'Solucion'
         },
         severityHigh: {
             sk: 'Vysoká',
             de: 'Hoch',
             en: 'High',
             it: 'Alta',
-            fr: 'Élevée',
+            fr: 'Elevee',
             es: 'Alta'
         },
         severityMedium: {
@@ -152,15 +156,15 @@ function getUiText(key) {
             de: 'Kategorien',
             en: 'Categories',
             it: 'Categorie',
-            fr: 'Catégories',
-            es: 'Categorías'
+            fr: 'Categories',
+            es: 'Categorias'
         },
         electricTitle: {
             sk: 'Elektrina',
             de: 'Elektrik',
             en: 'Electric',
-            it: 'Elettricità',
-            fr: 'Électricité',
+            it: 'Elettricita',
+            fr: 'Electricite',
             es: 'Electricidad'
         },
         measurementsTitle: {
@@ -173,11 +177,11 @@ function getUiText(key) {
         },
         measurementsIntro: {
             sk: 'Vyber typ merania a pokračuj do konkrétneho meracieho postupu',
-            de: 'Messart wählen und in den konkreten Messablauf wechseln',
+            de: 'Messart waehlen und in den konkreten Messablauf wechseln',
             en: 'Choose measurement type and continue to the specific workflow',
             it: 'Scegli il tipo di misura e continua nel flusso specifico',
-            fr: 'Choisissez le type de mesure et continuez dans la procédure',
-            es: 'Elija el tipo de medición y continúe al flujo específico'
+            fr: 'Choisissez le type de mesure et continuez dans la procedure',
+            es: 'Elija el tipo de medicion y continue al flujo especifico'
         }
     };
 
@@ -187,13 +191,13 @@ function getUiText(key) {
 function getTreeCountText(count) {
     const lang = appData.currentLang;
 
-    if (lang === 'de') return count === 1 ? '1 Baum' : `${count} Bäume`;
-    if (lang === 'en') return count === 1 ? '1 tree' : `${count} trees`;
-    if (lang === 'it') return count === 1 ? '1 albero' : `${count} alberi`;
-    if (lang === 'fr') return count === 1 ? '1 arbre' : `${count} arbres`;
-    if (lang === 'es') return count === 1 ? '1 árbol' : `${count} árboles`;
+    if (lang === 'de') return count === 1 ? '1 Diagn. Ablauf' : `${count} Diagn. Ablaeufe`;
+    if (lang === 'en') return count === 1 ? '1 diagnostic procedure' : `${count} diagnostic procedures`;
+    if (lang === 'it') return count === 1 ? '1 procedura diagnostica' : `${count} procedure diagnostiche`;
+    if (lang === 'fr') return count === 1 ? '1 procedure diag.' : `${count} procedures diag.`;
+    if (lang === 'es') return count === 1 ? '1 proced. diag.' : `${count} proced. diag.`;
 
-    return count === 1 ? '1 strom' : `${count} stromov`;
+    return count === 1 ? '1 Diagn. postup' : `${count} Diagn. postupov`;
 }
 
 function setActiveMenu(section) {
@@ -212,6 +216,7 @@ function hideAllMainViews() {
     document.getElementById('errorCodesView').classList.add('hidden');
     document.getElementById('wizardView').classList.add('hidden');
     document.getElementById('editorView').classList.add('hidden');
+    document.body.classList.remove('wizard-active');
 }
 
 function showSection(section) {
@@ -287,7 +292,6 @@ function showElectricSubcategories() {
     document.getElementById('electricView').classList.remove('hidden');
     
     const container = document.getElementById('electricSubcategories');
-    const lang = appData.currentLang;
     const electricTitle = document.querySelector('#electricView .categories-title span:last-child');
     if (electricTitle) electricTitle.textContent = getUiText('electricTitle');
     
@@ -446,11 +450,11 @@ function showDevicesSection() {
     document.getElementById('diagnosesList').innerHTML = `
         <div style="text-align: center; padding: 24px; color: #6b7280;">
             ${appData.currentLang === 'sk' ? 'Sekcia zariadení bude doplnená do ďalšej verzie' :
-              appData.currentLang === 'de' ? 'Gerätesektion wird in der nächsten Version ergänzt' :
+              appData.currentLang === 'de' ? 'Geraetesektion wird in der naechsten Version ergaenzt' :
               appData.currentLang === 'en' ? 'Devices section will be added in the next version' :
-              appData.currentLang === 'it' ? 'La sezione dispositivi verrà aggiunta nella prossima versione' :
-              appData.currentLang === 'fr' ? 'La section appareils sera ajoutée dans la prochaine version' :
-              'La sección de dispositivos se añadirá en la próxima versión'}
+              appData.currentLang === 'it' ? 'La sezione dispositivi verra aggiunta nella prossima versione' :
+              appData.currentLang === 'fr' ? 'La section appareils sera ajoutee dans la prochaine version' :
+              'La seccion de dispositivos se agregara en la proxima version'}
         </div>
     `;
 }
@@ -461,12 +465,12 @@ function showMeasurementsSection() {
     document.getElementById('currentCategoryName').textContent = getUiText('measurementsTitle');
 
     const cards = [
-        { icon: '🔋', title: { sk: 'Napätie batérie', de: 'Batteriespannung', en: 'Battery voltage', it: 'Tensione batteria', fr: 'Tension batterie', es: 'Voltaje de batería' } },
-        { icon: '⚡', title: { sk: 'D plus meranie', de: 'D plus Messung', en: 'D plus measurement', it: 'Misura D plus', fr: 'Mesure D plus', es: 'Medición D plus' } },
+        { icon: '🔋', title: { sk: 'Napätie batérie', de: 'Batteriespannung', en: 'Battery voltage', it: 'Tensione batteria', fr: 'Tension batterie', es: 'Voltaje de bateria' } },
+        { icon: '⚡', title: { sk: 'D plus meranie', de: 'D plus Messung', en: 'D plus measurement', it: 'Misura D plus', fr: 'Mesure D plus', es: 'Medicion D plus' } },
         { icon: '☀️', title: { sk: 'Solárne napätie', de: 'Solarspannung', en: 'Solar voltage', it: 'Tensione solare', fr: 'Tension solaire', es: 'Voltaje solar' } },
-        { icon: '🔌', title: { sk: '230V kontrola', de: '230V Prüfung', en: '230V check', it: 'Controllo 230V', fr: 'Contrôle 230V', es: 'Control 230V' } },
+        { icon: '🔌', title: { sk: '230V kontrola', de: '230V Pruefung', en: '230V check', it: 'Controllo 230V', fr: 'Controle 230V', es: 'Control 230V' } },
         { icon: '📟', title: { sk: 'Výstup EBL', de: 'EBL Ausgang', en: 'EBL output', it: 'Uscita EBL', fr: 'Sortie EBL', es: 'Salida EBL' } },
-        { icon: '🧪', title: { sk: 'Pokles pod záťažou', de: 'Spannungsabfall unter Last', en: 'Voltage drop under load', it: 'Caduta sotto carico', fr: 'Chute sous charge', es: 'Caída bajo carga' } }
+        { icon: '🧪', title: { sk: 'Pokles pod záťažou', de: 'Spannungsabfall unter Last', en: 'Voltage drop under load', it: 'Caduta sotto carico', fr: 'Chute sous charge', es: 'Caida bajo carga' } }
     ];
 
     const lang = appData.currentLang;
