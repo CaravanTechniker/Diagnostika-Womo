@@ -10,7 +10,7 @@
     <div class="app-wrapper">
         <div class="container" id="appContainer">
             <div class="header">
-                <div class="header-icon" onclick="handleHeaderIconClick()">
+                <div class="header-icon" id="adminTrigger" onclick="handleHeaderIconClick()">
                     <span id="headerIconText">🔧</span>
                     <img id="headerIconImg" class="hidden" src="" alt="">
                     <span class="edit-badge">UPRAVIT</span>
@@ -26,11 +26,6 @@
                 </div>
 
                 <div class="header-controls">
-                    <button class="admin-btn" onclick="toggleAdmin()">
-                        <span>⚙️</span>
-                        <span>Admin</span>
-                    </button>
-
                     <button class="lang-btn" onclick="openLangModal()">
                         <img id="currentLangFlagImg" src="https://flagcdn.com/w40/de.png" alt="DE" style="width: 20px; height: 15px; border-radius: 3px; object-fit: cover;">
                         <span id="currentLangCode">DE</span>
@@ -40,7 +35,13 @@
 
             <div class="search-bar" id="searchBar">
                 <span>🔍</span>
-                <input type="text" id="searchInput" placeholder="Hľadať..." oninput="handleSearch(this.value)">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Hľadať..."
+                    enterkeyhint="search"
+                    oninput="handleSearch(this.value)"
+                >
             </div>
 
             <div class="main-menu" id="mainMenu">
@@ -147,7 +148,6 @@
             <span data-translate="feedback">Spätná väzba</span>
         </button>
 
-        <!-- Modály -->
         <div id="passwordModal" class="modal-overlay" onclick="closeModal(event)">
             <div class="modal">
                 <div class="modal-header">
@@ -403,7 +403,7 @@
 
         <div class="status-bar">
             <span id="adminStatus"></span>
-            <span style="margin-left: 15px;">v5.2</span>
+            <span style="margin-left: 15px;">v5.3</span>
         </div>
     </div>
 
