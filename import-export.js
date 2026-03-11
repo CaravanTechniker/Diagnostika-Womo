@@ -27,6 +27,7 @@ function selectImportType(type) {
     if (type === 'tree') {
         document.getElementById('importStep1').classList.add('hidden');
         document.getElementById('importTreeStep').classList.remove('hidden');
+        document.getElementById('importErrorStep').classList.add('hidden');
         populateReplaceTreeSelect();
         
         document.querySelectorAll('input[name="treeImportAction"]').forEach(radio => {
@@ -36,6 +37,7 @@ function selectImportType(type) {
         });
     } else if (type === 'errorcodes') {
         document.getElementById('importStep1').classList.add('hidden');
+        document.getElementById('importTreeStep').classList.add('hidden');
         document.getElementById('importErrorStep').classList.remove('hidden');
     }
 }
@@ -74,12 +76,57 @@ function copyExportCode() {
 
 function downloadExportCode() {
     const text = document.getElementById('exportCodeDisplay').textContent;
-    const blob = new Blob([text], {type: 'application/json'});
+    const blob = new Blob([text], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'strom.json';
     a.click();
+}
+
+function normalizeImportText(value) {
+    return (value || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isEblTree(data) {
+    const haystack = [
+        data?.id,
+        data?.title,
+        data?.name,
+        data?.desc,
+        data?.description,
+        data?.device,
+        data?.brand
+    ].map(normalizeImportText).join(' ');
+    
+    return (
+        haystack.includes('ebl') ||
+        haystack.includes('nordelettronica') ||
+        haystack.includes('nord elettronica') ||
+        haystack.includes('nordellettronica') ||
+        haystack.includes('schaudt') ||
+        haystack.includes('cbe')
+    );
+}
+
+function getCategoryById(id) {
+    return appData.categories.find(c => c.id === id);
+}
+
+function getImportTargetCategory(data) {
+    const targetId = isEblTree(data) ? 'ebl' : 'elektro';
+    return getCategoryById(targetId) || getCategoryById('elektro') || appData.categories[0];
+}
+
+function removeDiagnosisFromAllCategories(id) {
+    for (const cat of appData.categories) {
+        if (!cat.diagnoses) continue;
+        cat.diagnoses = cat.diagnoses.filter(d => d.id !== id);
+    }
 }
 
 function doImportTree() {
@@ -94,21 +141,29 @@ function doImportTree() {
         const action = document.querySelector('input[name="treeImportAction"]:checked').value;
         
         if (action === 'new') {
-            data.id = 'imported-' + Date.now();
-            const targetCat = appData.categories.find(c => c.id === 'elektro');
-            if (targetCat) {
-                targetCat.diagnoses.push(data);
+            if (!data.id || typeof data.id !== 'string' || !data.id.trim()) {
+                data.id = 'imported-' + Date.now();
             }
+            
+            removeDiagnosisFromAllCategories(data.id);
+            
+            const targetCat = getImportTargetCategory(data);
+            if (!targetCat.diagnoses) targetCat.diagnoses = [];
+            targetCat.diagnoses.push(data);
         } else {
             const replaceId = document.getElementById('replaceTreeSelect').value;
-            for (let cat of appData.categories) {
-                if (!cat.diagnoses) continue;
-                const idx = cat.diagnoses.findIndex(d => d.id === replaceId);
-                if (idx >= 0) {
-                    data.id = replaceId;
-                    cat.diagnoses[idx] = data;
-                    break;
-                }
+            let replaced = false;
+            
+            removeDiagnosisFromAllCategories(replaceId);
+            data.id = replaceId;
+            
+            const targetCat = getImportTargetCategory(data);
+            if (!targetCat.diagnoses) targetCat.diagnoses = [];
+            targetCat.diagnoses.push(data);
+            replaced = true;
+            
+            if (!replaced) {
+                throw new Error('Nepodarilo sa nahradiť vybraný strom.');
             }
         }
         
@@ -159,7 +214,8 @@ function doImportErrorCodes() {
             appData.errorCodes[ec.code] = {
                 ...ec,
                 device: CONFIG.DEVICE_BRANDS.find(b => b.id === brandId)?.name || brandId,
-                brand: brandId
+                brand: brandId,
+                model: model || ''
             };
         });
         
