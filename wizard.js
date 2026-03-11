@@ -6,14 +6,14 @@ function startWizard(diagnosisId) {
     const diag = cat.diagnoses.find(d => d.id === diagnosisId);
     const lang = appData.currentLang;
     const dt = diag.translations[lang] || diag.translations['de'];
-    
+
     document.getElementById('diagnosesView').classList.add('hidden');
     document.getElementById('errorCodesView').classList.add('hidden');
     document.getElementById('wizardView').classList.remove('hidden');
-    
-    document.getElementById('wizardCategoryName').textContent = cat.translations[lang].name || cat.translations['de'].name;
+
+    document.getElementById('wizardCategoryName').textContent = cat.translations[lang]?.name || cat.translations['de'].name;
     document.getElementById('wizardDiagnosisName').textContent = dt.title;
-    
+
     currentStep = 0;
     pathHistory = [];
     renderWizard();
@@ -25,23 +25,13 @@ function renderWizard() {
     const lang = appData.currentLang;
     const data = diag.translations[lang] || diag.translations['de'];
     const t = UI_TRANSLATIONS[lang];
-    
+
     const content = document.getElementById('wizardContent');
-    
-    let pathHtml = '';
-    if (pathHistory.length > 0) {
-        document.getElementById('pathHistory').classList.remove('hidden');
-        pathHtml = pathHistory.map((p, i) => `
-            <div style="margin-bottom: 6px; font-size: 0.9em; line-height: 1.4;">
-                ${i + 1}. ${p.question}
-                <span style="color: ${p.answer === 'yes' ? '#22c55e' : '#ef4444'}; font-weight: bold;">
-                    ${p.answer === 'yes' ? t.yes : t.no}
-                </span>
-            </div>
-        `).join('');
-        document.getElementById('pathContent').innerHTML = pathHtml;
-    } else {
-        document.getElementById('pathHistory').classList.add('hidden');
+
+    // Horný blok cesty úplne vypneme
+    const pathHistoryBox = document.getElementById('pathHistory');
+    if (pathHistoryBox) {
+        pathHistoryBox.classList.add('hidden');
     }
 
     if (typeof currentStep === 'string' && currentStep.startsWith('result')) {
@@ -69,9 +59,9 @@ function renderWizard() {
         `;
         return;
     }
-    
+
     const step = data.steps[currentStep];
-    
+
     content.innerHTML = `
         <div class="wizard-stage">
             <div class="step-number">${currentStep + 1}</div>
@@ -91,15 +81,6 @@ function renderWizard() {
                     ? `<button class="btn-back" onclick="goBack()">← ${t.back}</button>`
                     : `<button class="btn-back" onclick="showDiagnoses('${currentCategory}')">← ${t.back}</button>`}
             </div>
-
-            ${pathHistory.length > 0 ? `
-                <div class="wizard-answer-block wizard-answer-hint">
-                    <div style="font-weight: 700; margin-bottom: 8px; color: #374151;">
-                        ${t.currentPath}
-                    </div>
-                    ${pathHtml}
-                </div>
-            ` : ''}
         </div>
     `;
 }
@@ -116,12 +97,12 @@ function goBackFromResult() {
         const cat = appData.categories.find(c => c.id === currentCategory);
         const diag = cat.diagnoses.find(d => d.id === currentDiagnosis);
         currentStep = 0;
-        
+
         for (let p of pathHistory) {
             const step = (diag.translations[appData.currentLang] || diag.translations['de']).steps[currentStep];
             currentStep = p.answer === 'yes' ? step.yes : step.no;
         }
-        
+
         renderWizard();
     } else {
         showDiagnoses(currentCategory);
@@ -133,12 +114,12 @@ function answer(isYes) {
     const diag = cat.diagnoses.find(d => d.id === currentDiagnosis);
     const lang = appData.currentLang;
     const step = (diag.translations[lang] || diag.translations['de']).steps[currentStep];
-    
+
     pathHistory.push({
         question: step.q,
         answer: isYes ? 'yes' : 'no'
     });
-    
+
     currentStep = isYes ? step.yes : step.no;
     renderWizard();
 
@@ -174,21 +155,21 @@ function goBack() {
 function exportPath() {
     const lang = appData.currentLang;
     const t = UI_TRANSLATIONS[lang];
-    
+
     let text = t.currentPath + '\n\n';
     text += 'Diagnosa: ' + document.getElementById('wizardDiagnosisName').textContent + '\n';
     text += 'Kategoria: ' + document.getElementById('wizardCategoryName').textContent + '\n\n';
-    
+
     pathHistory.forEach((p, i) => {
         const answer = p.answer === 'yes' ? t.yes : t.no;
         text += (i + 1) + '. ' + p.question + '\n   Odpoved: ' + answer + '\n\n';
     });
-    
+
     const resultDiv = document.querySelector('.result');
     if (resultDiv) {
         text += 'VYSLEDOK:\n' + resultDiv.textContent.trim();
     }
-    
+
     document.getElementById('pathTextDisplay').textContent = text;
     document.getElementById('exportPathModal').classList.add('active');
 }
