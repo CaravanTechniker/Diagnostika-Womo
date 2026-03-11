@@ -15,12 +15,17 @@ function loadDataFromStorage() {
         const stored = localStorage.getItem('caravanDiagnosticData');
         if (stored) {
             const parsed = JSON.parse(stored);
-            return mergeWithDefault(parsed);
+            const merged = mergeWithDefault(parsed);
+            migrateEblDiagnoses(merged);
+            return merged;
         }
     } catch (e) {
         console.error('Error loading from storage:', e);
     }
-    return JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+
+    const fallback = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+    migrateEblDiagnoses(fallback);
+    return fallback;
 }
 
 // Uloženie dát do localStorage
@@ -40,6 +45,7 @@ function mergeWithDefault(stored) {
     if (stored.currentLang) merged.currentLang = stored.currentLang;
     if (stored.headerPhoto !== undefined) merged.headerPhoto = stored.headerPhoto;
     if (stored.contactPhoto !== undefined) merged.contactPhoto = stored.contactPhoto;
+
     if (stored.categories) {
         stored.categories.forEach((storedCat, idx) => {
             if (merged.categories[idx]) {
@@ -55,8 +61,70 @@ function mergeWithDefault(stored) {
             }
         });
     }
+
     if (stored.errorCodes) merged.errorCodes = stored.errorCodes;
     return merged;
+}
+
+function normalizeEblText(value) {
+    return (value || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function isEblDiagnosis(diag) {
+    const haystack = [
+        diag?.id,
+        diag?.title,
+        diag?.name,
+        diag?.desc,
+        diag?.description,
+        diag?.device,
+        diag?.brand
+    ].map(normalizeEblText).join(' ');
+
+    return (
+        haystack.includes('ebl') ||
+        haystack.includes('nordelettronica') ||
+        haystack.includes('nord elettronica') ||
+        haystack.includes('nordellettronica') ||
+        haystack.includes('schaudt') ||
+        haystack.includes('cbe')
+    );
+}
+
+function migrateEblDiagnoses(data) {
+    if (!data || !Array.isArray(data.categories)) return;
+
+    const elektroCat = data.categories.find(cat => cat.id === 'elektro');
+    const eblCat = data.categories.find(cat => cat.id === 'ebl');
+
+    if (!elektroCat || !eblCat) return;
+
+    if (!Array.isArray(elektroCat.diagnoses)) elektroCat.diagnoses = [];
+    if (!Array.isArray(eblCat.diagnoses)) eblCat.diagnoses = [];
+
+    const keepInElektro = [];
+    const moveToEbl = [];
+
+    for (const diag of elektroCat.diagnoses) {
+        if (isEblDiagnosis(diag)) {
+            moveToEbl.push(diag);
+        } else {
+            keepInElektro.push(diag);
+        }
+    }
+
+    elektroCat.diagnoses = keepInElektro;
+
+    for (const diag of moveToEbl) {
+        const exists = eblCat.diagnoses.some(existing => existing.id === diag.id);
+        if (!exists) {
+            eblCat.diagnoses.push(diag);
+        }
+    }
 }
 
 // Nájdenie stromu podľa ID
