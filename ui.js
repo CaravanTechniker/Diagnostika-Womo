@@ -8,6 +8,17 @@ function init() {
     loadPhotos();
     initBrandGrid();
     updateAdminStatus();
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSearch(this.value);
+                this.blur();
+            }
+        });
+    }
     
     const adminSession = sessionStorage.getItem('adminSession');
     if (adminSession === 'true') {
@@ -18,7 +29,7 @@ function init() {
 
 function updateLanguage() {
     const lang = appData.currentLang;
-    const t = UI_TRANSLATIONS[lang];
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.de;
     
     document.querySelectorAll('[data-translate]').forEach(el => {
         const key = el.getAttribute('data-translate');
@@ -29,22 +40,184 @@ function updateLanguage() {
     if (searchInput) searchInput.placeholder = t.search || 'Hľadať...';
 }
 
-function showSection(section) {
-    currentSection = section;
-    
+function getUiText(key) {
+    const lang = appData.currentLang;
+    const map = {
+        noTrees: {
+            sk: 'Žiadne stromy v tejto kategórii',
+            de: 'Keine Bäume in dieser Kategorie',
+            en: 'No trees in this category',
+            it: 'Nessun albero in questa categoria',
+            fr: 'Aucun arbre dans cette catégorie',
+            es: 'No hay árboles en esta categoría'
+        },
+        noResults: {
+            sk: 'Žiadne výsledky',
+            de: 'Keine Ergebnisse',
+            en: 'No results',
+            it: 'Nessun risultato',
+            fr: 'Aucun résultat',
+            es: 'Sin resultados'
+        },
+        searchResults: {
+            sk: 'Výsledky vyhľadávania',
+            de: 'Suchergebnisse',
+            en: 'Search results',
+            it: 'Risultati della ricerca',
+            fr: 'Résultats de recherche',
+            es: 'Resultados de búsqueda'
+        },
+        searchErrorCode: {
+            sk: 'Vyhľadať chybový kód',
+            de: 'Fehlercode suchen',
+            en: 'Search error code',
+            it: 'Cerca codice errore',
+            fr: 'Rechercher un code erreur',
+            es: 'Buscar código de error'
+        },
+        enterCode: {
+            sk: 'Zadajte kód napr E212H',
+            de: 'Code eingeben zB E212H',
+            en: 'Enter code e.g. E212H',
+            it: 'Inserisci codice es E212H',
+            fr: 'Entrez le code ex E212H',
+            es: 'Introduzca el código p ej E212H'
+        },
+        searchButton: {
+            sk: 'Vyhľadať',
+            de: 'Suchen',
+            en: 'Search',
+            it: 'Cerca',
+            fr: 'Rechercher',
+            es: 'Buscar'
+        },
+        codeNotFound: {
+            sk: 'Kód nebol nájdený',
+            de: 'Code wurde nicht gefunden',
+            en: 'Code not found',
+            it: 'Codice non trovato',
+            fr: 'Code introuvable',
+            es: 'Código no encontrado'
+        },
+        device: {
+            sk: 'Zariadenie',
+            de: 'Gerät',
+            en: 'Device',
+            it: 'Dispositivo',
+            fr: 'Appareil',
+            es: 'Dispositivo'
+        },
+        description: {
+            sk: 'Popis',
+            de: 'Beschreibung',
+            en: 'Description',
+            it: 'Descrizione',
+            fr: 'Description',
+            es: 'Descripción'
+        },
+        solution: {
+            sk: 'Riešenie',
+            de: 'Lösung',
+            en: 'Solution',
+            it: 'Soluzione',
+            fr: 'Solution',
+            es: 'Solución'
+        },
+        severityHigh: {
+            sk: 'Vysoká',
+            de: 'Hoch',
+            en: 'High',
+            it: 'Alta',
+            fr: 'Élevée',
+            es: 'Alta'
+        },
+        severityMedium: {
+            sk: 'Stredná',
+            de: 'Mittel',
+            en: 'Medium',
+            it: 'Media',
+            fr: 'Moyenne',
+            es: 'Media'
+        },
+        severityLow: {
+            sk: 'Nízka',
+            de: 'Niedrig',
+            en: 'Low',
+            it: 'Bassa',
+            fr: 'Faible',
+            es: 'Baja'
+        },
+        categoriesTitle: {
+            sk: 'Kategórie',
+            de: 'Kategorien',
+            en: 'Categories',
+            it: 'Categorie',
+            fr: 'Catégories',
+            es: 'Categorías'
+        },
+        electricTitle: {
+            sk: 'Elektrina',
+            de: 'Elektrik',
+            en: 'Electric',
+            it: 'Elettricità',
+            fr: 'Électricité',
+            es: 'Electricidad'
+        },
+        measurementsTitle: {
+            sk: 'Merania',
+            de: 'Messungen',
+            en: 'Measurements',
+            it: 'Misurazioni',
+            fr: 'Mesures',
+            es: 'Mediciones'
+        },
+        measurementsIntro: {
+            sk: 'Vyber typ merania a pokračuj do konkrétneho meracieho postupu',
+            de: 'Messart wählen und in den konkreten Messablauf wechseln',
+            en: 'Choose measurement type and continue to the specific workflow',
+            it: 'Scegli il tipo di misura e continua nel flusso specifico',
+            fr: 'Choisissez le type de mesure et continuez dans la procédure',
+            es: 'Elija el tipo de medición y continúe al flujo específico'
+        }
+    };
+
+    return (map[key] && (map[key][lang] || map[key].de)) || key;
+}
+
+function getTreeCountText(count) {
+    const lang = appData.currentLang;
+
+    if (lang === 'de') return count === 1 ? '1 Baum' : `${count} Bäume`;
+    if (lang === 'en') return count === 1 ? '1 tree' : `${count} trees`;
+    if (lang === 'it') return count === 1 ? '1 albero' : `${count} alberi`;
+    if (lang === 'fr') return count === 1 ? '1 arbre' : `${count} arbres`;
+    if (lang === 'es') return count === 1 ? '1 árbol' : `${count} árboles`;
+
+    return count === 1 ? '1 strom' : `${count} stromov`;
+}
+
+function setActiveMenu(section) {
     document.querySelectorAll('.menu-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.section === section) {
             btn.classList.add('active');
         }
     });
-    
+}
+
+function hideAllMainViews() {
     document.getElementById('categoriesView').classList.add('hidden');
     document.getElementById('electricView').classList.add('hidden');
     document.getElementById('diagnosesView').classList.add('hidden');
     document.getElementById('errorCodesView').classList.add('hidden');
     document.getElementById('wizardView').classList.add('hidden');
     document.getElementById('editorView').classList.add('hidden');
+}
+
+function showSection(section) {
+    currentSection = section;
+    setActiveMenu(section);
+    hideAllMainViews();
     
     switch(section) {
         case 'diagnostic':
@@ -54,9 +227,15 @@ function showSection(section) {
             showErrorCodesSection();
             break;
         case 'devices':
+            showDevicesSection();
+            break;
         case 'measurements':
+            showMeasurementsSection();
+            break;
         case 'ebl':
-            alert('Sekcia sa pripravuje');
+            showDiagnoses('ebl');
+            break;
+        default:
             showCategories();
             break;
     }
@@ -73,7 +252,7 @@ function renderCategories() {
     list.innerHTML = appData.categories.map(cat => {
         const t = cat.translations[lang] || cat.translations['de'];
         const count = cat.diagnoses ? cat.diagnoses.length : 0;
-        const countText = count === 1 ? '1 strom' : count + ' stromov';
+        const countText = getTreeCountText(count);
         
         const iconContent = cat.iconPhoto ? 
             `<img src="${cat.iconPhoto}" alt="">` : 
@@ -104,15 +283,13 @@ function showCategoryContent(categoryId) {
 }
 
 function showElectricSubcategories() {
-    document.getElementById('categoriesView').classList.add('hidden');
+    hideAllMainViews();
     document.getElementById('electricView').classList.remove('hidden');
-    document.getElementById('diagnosesView').classList.add('hidden');
-    document.getElementById('errorCodesView').classList.add('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
     
     const container = document.getElementById('electricSubcategories');
     const lang = appData.currentLang;
+    const electricTitle = document.querySelector('#electricView .categories-title span:last-child');
+    if (electricTitle) electricTitle.textContent = getUiText('electricTitle');
     
     container.innerHTML = CONFIG.ELECTRIC_SUBCATEGORIES.map(sub => {
         const elektroCat = appData.categories.find(c => c.id === 'elektro');
@@ -124,7 +301,7 @@ function showElectricSubcategories() {
                 <span class="subcategory-icon">${sub.icon}</span>
                 <div style="flex: 1;">
                     <div class="subcategory-name">${sub.name}</div>
-                    <div style="color: #60a5fa; font-size: 0.85em; font-weight: 600;">${count} stromov</div>
+                    <div style="color: #60a5fa; font-size: 0.85em; font-weight: 600;">${getTreeCountText(count)}</div>
                 </div>
                 <span style="color: #9ca3af;">›</span>
             </div>
@@ -135,21 +312,21 @@ function showElectricSubcategories() {
 function showElectricTrees(subcategoryId) {
     currentCategory = 'elektro';
     const elektroCat = appData.categories.find(c => c.id === 'elektro');
-    const lang = appData.currentLang;
     const sub = CONFIG.ELECTRIC_SUBCATEGORIES.find(s => s.id === subcategoryId);
     
     document.getElementById('electricView').classList.add('hidden');
     document.getElementById('diagnosesView').classList.remove('hidden');
     
-    document.getElementById('currentCategoryName').textContent = 'Elektrina › ' + sub.name;
+    document.getElementById('currentCategoryName').textContent = `${getUiText('electricTitle')} › ${sub.name}`;
     
     const list = document.getElementById('diagnosesList');
     const trees = elektroCat && elektroCat.diagnoses ? 
         elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === subcategoryId) : [];
     
     if (trees.length === 0) {
-        list.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Žiadne stromy v tejto kategórii</div>';
+        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noTrees')}</div>`;
     } else {
+        const lang = appData.currentLang;
         list.innerHTML = trees.map(d => {
             const dt = d.translations[lang] || d.translations['de'];
             return `
@@ -165,21 +342,19 @@ function showElectricTrees(subcategoryId) {
 function showDiagnoses(categoryId) {
     currentCategory = categoryId;
     const cat = appData.categories.find(c => c.id === categoryId);
+    if (!cat) return;
+
     const lang = appData.currentLang;
     const t = cat.translations[lang] || cat.translations['de'];
     
-    document.getElementById('categoriesView').classList.add('hidden');
-    document.getElementById('electricView').classList.add('hidden');
+    hideAllMainViews();
     document.getElementById('diagnosesView').classList.remove('hidden');
-    document.getElementById('errorCodesView').classList.add('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
     
     document.getElementById('currentCategoryName').textContent = t.name;
     
     const list = document.getElementById('diagnosesList');
     if (!cat.diagnoses || cat.diagnoses.length === 0) {
-        list.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Žiadne stromy v tejto kategórii</div>';
+        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noTrees')}</div>`;
     } else {
         list.innerHTML = cat.diagnoses.map(d => {
             const dt = d.translations[lang] || d.translations['de'];
@@ -194,31 +369,29 @@ function showDiagnoses(categoryId) {
 }
 
 function showCategories() {
+    hideAllMainViews();
     document.getElementById('categoriesView').classList.remove('hidden');
-    document.getElementById('electricView').classList.add('hidden');
-    document.getElementById('diagnosesView').classList.add('hidden');
-    document.getElementById('errorCodesView').classList.add('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
+
+    const categoriesTitle = document.querySelector('#categoriesView [data-translate="categories"]');
+    if (categoriesTitle) {
+        categoriesTitle.textContent = getUiText('categoriesTitle');
+    }
+
     currentCategory = null;
     currentDiagnosis = null;
 }
 
 function showErrorCodesSection() {
-    document.getElementById('categoriesView').classList.add('hidden');
-    document.getElementById('electricView').classList.add('hidden');
-    document.getElementById('diagnosesView').classList.add('hidden');
+    hideAllMainViews();
     document.getElementById('errorCodesView').classList.remove('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
     
     const content = document.getElementById('errorCodesContent');
     content.innerHTML = `
         <div class="error-search-box">
-            <div style="font-weight: 600; margin-bottom: 10px; color: #374151;">Vyhľadať chybový kód:</div>
-            <input type="text" class="error-search-input" id="errorCodeSearch" placeholder="Zadajte kód (napr. E212H)" onkeypress="if(event.key==='Enter') searchErrorCode(this.value)">
+            <div style="font-weight: 600; margin-bottom: 10px; color: #374151;">${getUiText('searchErrorCode')}:</div>
+            <input type="text" class="error-search-input" id="errorCodeSearch" placeholder="${getUiText('enterCode')}" onkeypress="if(event.key==='Enter'){ searchErrorCode(this.value); this.blur(); }">
             <button class="btn-primary" onclick="searchErrorCode(document.getElementById('errorCodeSearch').value)" style="margin-top: 10px;">
-                Vyhľadať
+                ${getUiText('searchButton')}
             </button>
         </div>
         <div id="errorCodeResult"></div>
@@ -235,7 +408,10 @@ function searchErrorCode(code) {
         const lang = appData.currentLang;
         const et = found.translations[lang] || found.translations['de'] || found.translations['sk'];
         const severityClass = 'severity-' + found.severity;
-        const severityText = found.severity === 'high' ? 'Vysoká' : (found.severity === 'medium' ? 'Stredná' : 'Nízka');
+        const severityText =
+            found.severity === 'high' ? getUiText('severityHigh') :
+            found.severity === 'medium' ? getUiText('severityMedium') :
+            getUiText('severityLow');
         
         resultDiv.innerHTML = `
             <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-top: 15px;">
@@ -244,35 +420,84 @@ function searchErrorCode(code) {
                     <span class="error-severity ${severityClass}">${severityText}</span>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">Zariadenie:</div>
+                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('device')}:</div>
                     <div style="font-weight: 600;">${found.device}</div>
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">Popis:</div>
+                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('description')}:</div>
                     <div>${et.description}</div>
                 </div>
                 <div>
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">Riešenie:</div>
+                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('solution')}:</div>
                     <div>${et.solution}</div>
                 </div>
             </div>
         `;
     } else {
-        resultDiv.innerHTML = '<div style="text-align: center; padding: 30px; color: #6b7280;">Kód nebol nájdený</div>';
+        resultDiv.innerHTML = `<div style="text-align: center; padding: 30px; color: #6b7280;">${getUiText('codeNotFound')}</div>`;
     }
 }
 
+function showDevicesSection() {
+    hideAllMainViews();
+    document.getElementById('diagnosesView').classList.remove('hidden');
+    document.getElementById('currentCategoryName').textContent = getUiText('device');
+
+    document.getElementById('diagnosesList').innerHTML = `
+        <div style="text-align: center; padding: 24px; color: #6b7280;">
+            ${appData.currentLang === 'sk' ? 'Sekcia zariadení bude doplnená do ďalšej verzie' :
+              appData.currentLang === 'de' ? 'Gerätesektion wird in der nächsten Version ergänzt' :
+              appData.currentLang === 'en' ? 'Devices section will be added in the next version' :
+              appData.currentLang === 'it' ? 'La sezione dispositivi verrà aggiunta nella prossima versione' :
+              appData.currentLang === 'fr' ? 'La section appareils sera ajoutée dans la prochaine version' :
+              'La sección de dispositivos se añadirá en la próxima versión'}
+        </div>
+    `;
+}
+
+function showMeasurementsSection() {
+    hideAllMainViews();
+    document.getElementById('diagnosesView').classList.remove('hidden');
+    document.getElementById('currentCategoryName').textContent = getUiText('measurementsTitle');
+
+    const cards = [
+        { icon: '🔋', title: { sk: 'Napätie batérie', de: 'Batteriespannung', en: 'Battery voltage', it: 'Tensione batteria', fr: 'Tension batterie', es: 'Voltaje de batería' } },
+        { icon: '⚡', title: { sk: 'D plus meranie', de: 'D plus Messung', en: 'D plus measurement', it: 'Misura D plus', fr: 'Mesure D plus', es: 'Medición D plus' } },
+        { icon: '☀️', title: { sk: 'Solárne napätie', de: 'Solarspannung', en: 'Solar voltage', it: 'Tensione solare', fr: 'Tension solaire', es: 'Voltaje solar' } },
+        { icon: '🔌', title: { sk: '230V kontrola', de: '230V Prüfung', en: '230V check', it: 'Controllo 230V', fr: 'Contrôle 230V', es: 'Control 230V' } },
+        { icon: '📟', title: { sk: 'Výstup EBL', de: 'EBL Ausgang', en: 'EBL output', it: 'Uscita EBL', fr: 'Sortie EBL', es: 'Salida EBL' } },
+        { icon: '🧪', title: { sk: 'Pokles pod záťažou', de: 'Spannungsabfall unter Last', en: 'Voltage drop under load', it: 'Caduta sotto carico', fr: 'Chute sous charge', es: 'Caída bajo carga' } }
+    ];
+
+    const lang = appData.currentLang;
+
+    document.getElementById('diagnosesList').innerHTML = `
+        <div style="margin-bottom: 18px; color: #64748b; font-weight: 600;">
+            ${getUiText('measurementsIntro')}
+        </div>
+        ${cards.map(card => `
+            <div class="diagnosis-item" onclick="alert('${card.title[lang] || card.title.de}')">
+                <div class="diagnosis-title">${card.icon} ${card.title[lang] || card.title.de}</div>
+                <span style="color: #9ca3af;">›</span>
+            </div>
+        `).join('')}
+    `;
+}
+
 function handleSearch(query) {
-    if (!query.trim()) {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
         if (currentCategory) {
             showDiagnoses(currentCategory);
         } else {
             renderCategories();
+            showCategories();
         }
         return;
     }
     
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = trimmed.toLowerCase();
     const lang = appData.currentLang;
     
     let results = [];
@@ -287,29 +512,29 @@ function handleSearch(query) {
         }
     });
     
-    const list = document.getElementById('diagnosesList');
-    document.getElementById('categoriesView').classList.add('hidden');
-    document.getElementById('electricView').classList.add('hidden');
+    hideAllMainViews();
     document.getElementById('diagnosesView').classList.remove('hidden');
-    document.getElementById('errorCodesView').classList.add('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
     
-    document.getElementById('currentCategoryName').textContent = 'Výsledky vyhľadávania: "' + query + '"';
+    const list = document.getElementById('diagnosesList');
+    document.getElementById('currentCategoryName').textContent = `${getUiText('searchResults')}: "${trimmed}"`;
     
     if (results.length === 0) {
-        list.innerHTML = '<div style="text-align: center; padding: 40px; color: #6b7280;">Žiadne výsledky</div>';
+        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noResults')}</div>`;
     } else {
         list.innerHTML = results.map(r => {
             const dt = r.diag.translations[lang] || r.diag.translations['de'];
+            const ct = r.cat.translations[lang] || r.cat.translations['de'];
             return `
                 <div class="diagnosis-item" onclick="startWizardFromSearch('${r.diag.id}', '${r.cat.id}')">
                     <div class="diagnosis-title">${dt.title}</div>
-                    <div style="color: #9ca3af; font-size: 0.85em;">${r.cat.translations[lang].name}</div>
+                    <div style="color: #9ca3af; font-size: 0.85em;">${ct.name}</div>
                 </div>
             `;
         }).join('');
     }
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.blur();
 }
 
 function startWizardFromSearch(diagId, catId) {
