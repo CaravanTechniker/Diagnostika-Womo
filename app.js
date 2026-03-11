@@ -1,5 +1,33 @@
 // Hlavný aplikačný súbor
 
+// Základná príprava pre manuály
+const MANUALS_DATA = {
+    truma: {
+        name: 'Truma',
+        items: []
+    },
+    alde: {
+        name: 'Alde',
+        items: []
+    },
+    alphatronics: {
+        name: 'Alphatronics',
+        items: []
+    },
+    schaudt: {
+        name: 'Schaudt',
+        items: []
+    },
+    nordelettronica: {
+        name: 'Nordelettronica',
+        items: []
+    },
+    cbe: {
+        name: 'CBE',
+        items: []
+    }
+};
+
 // Admin funkcie
 function toggleAdmin() {
     if (isAdminLoggedIn) {
@@ -65,12 +93,15 @@ function closeAdminModal() {
 // Kontakt funkcie
 function openContactModal() {
     const lang = appData.currentLang;
-    const ct = CONTACT_TRANSLATIONS[lang];
+    const ct = CONTACT_TRANSLATIONS[lang] || CONTACT_TRANSLATIONS.de;
     
     document.getElementById('contactWarningTitle').textContent = ct.warningTitle;
     document.getElementById('contactWarningSubtext').textContent = ct.warningSubtext;
-    document.querySelector('.sms-action span:last-child').textContent = ct.smsText;
-    document.getElementById('contactNotice').innerHTML = `<strong>⚠️ ${ct.notice.split(':')[0]}:</strong> ${ct.notice.split(':')[1] || ct.notice}`;
+
+    const smsLabel = document.querySelector('.sms-action span:last-child');
+    if (smsLabel) smsLabel.textContent = ct.smsText;
+
+    document.getElementById('contactNotice').innerHTML = `<strong>⚠️</strong> ${ct.notice}`;
     document.getElementById('closeContactBtn').textContent = ct.closeBtn;
     
     document.getElementById('contactModal').classList.add('active');
@@ -118,13 +149,76 @@ function setLanguage(code) {
     appData.currentLang = code;
     updateFlagDisplay();
     updateLanguage();
-    renderCategories();
-    if (currentCategory) {
-        showDiagnoses(currentCategory);
+
+    if (typeof renderCategories === 'function') {
+        renderCategories();
     }
-    if (currentDiagnosis) renderWizard();
+
+    if (currentCategory) {
+        if (typeof showDiagnoses === 'function') {
+            showDiagnoses(currentCategory);
+        }
+    }
+
+    if (currentDiagnosis && typeof renderWizard === 'function') {
+        renderWizard();
+    }
+
     saveDataToStorage();
     closeLangModal();
+}
+
+// Príprava na manuály
+function openManualsModal() {
+    const modal = document.getElementById('langModal');
+    const options = document.getElementById('langOptions');
+
+    options.innerHTML = Object.entries(MANUALS_DATA).map(([key, section]) => `
+        <div class="lang-option" onclick="openManualSection('${key}')">
+            <div class="lang-info">
+                <div class="lang-name">${section.name}</div>
+                <div class="lang-code">${section.items.length} PDF</div>
+            </div>
+        </div>
+    `).join('');
+
+    modal.classList.add('active');
+}
+
+function openManualSection(sectionKey) {
+    const modal = document.getElementById('langModal');
+    const options = document.getElementById('langOptions');
+    const section = MANUALS_DATA[sectionKey];
+
+    if (!section) return;
+
+    if (!section.items.length) {
+        options.innerHTML = `
+            <div class="lang-option selected" onclick="openManualsModal()">
+                <div class="lang-info">
+                    <div class="lang-name">${section.name}</div>
+                    <div class="lang-code">Zatial bez PDF suborov</div>
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="openManualsModal()">Spat</button>
+        `;
+        modal.classList.add('active');
+        return;
+    }
+
+    options.innerHTML = `
+        ${section.items.map(item => `
+            <div class="lang-option" onclick="window.open('${item.url}', '_blank')">
+                <div class="lang-info">
+                    <div class="lang-name">${item.title}</div>
+                    <div class="lang-code">PDF</div>
+                </div>
+            </div>
+        `).join('')}
+        <button class="btn-secondary" onclick="openManualsModal()">Spat</button>
+    `;
+
+    modal.classList.add('active');
 }
 
 // Foto funkcie
@@ -178,7 +272,9 @@ function handlePhotoUpload(event) {
             const cat = appData.categories.find(c => c.id === catId);
             if (cat) {
                 cat.iconPhoto = e.target.result;
-                renderCategories();
+                if (typeof renderCategories === 'function') {
+                    renderCategories();
+                }
             }
         }
         saveDataToStorage();
@@ -204,7 +300,9 @@ function removePhoto() {
         const cat = appData.categories.find(c => c.id === catId);
         if (cat) {
             cat.iconPhoto = null;
-            renderCategories();
+            if (typeof renderCategories === 'function') {
+                renderCategories();
+            }
         }
     }
     saveDataToStorage();
