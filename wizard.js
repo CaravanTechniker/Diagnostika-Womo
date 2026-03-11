@@ -28,35 +28,12 @@ function renderWizard() {
     
     const content = document.getElementById('wizardContent');
     
-    if (typeof currentStep === 'string' && currentStep.startsWith('result')) {
-        const result = data.results[currentStep];
-        content.innerHTML = `
-            <div class="result ${result.type}">
-                ${result.text}
-            </div>
-            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button class="btn-back" onclick="goBackFromResult()">
-                    ← ${t.back}
-                </button>
-                <button class="btn-restart" onclick="restartWizard()">
-                    🔄 Restart
-                </button>
-                <button class="btn-export-path" onclick="exportPath()">
-                    📋 ${t.exportPath}
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    const step = data.steps[currentStep];
-    
     let pathHtml = '';
     if (pathHistory.length > 0) {
         document.getElementById('pathHistory').classList.remove('hidden');
         pathHtml = pathHistory.map((p, i) => `
-            <div style="margin-bottom: 4px; font-size: 0.9em;">
-                ${i + 1}. ${p.question} 
+            <div style="margin-bottom: 6px; font-size: 0.9em; line-height: 1.4;">
+                ${i + 1}. ${p.question}
                 <span style="color: ${p.answer === 'yes' ? '#22c55e' : '#ef4444'}; font-weight: bold;">
                     ${p.answer === 'yes' ? t.yes : t.no}
                 </span>
@@ -66,18 +43,63 @@ function renderWizard() {
     } else {
         document.getElementById('pathHistory').classList.add('hidden');
     }
+
+    if (typeof currentStep === 'string' && currentStep.startsWith('result')) {
+        const result = data.results[currentStep];
+        content.innerHTML = `
+            <div class="wizard-stage">
+                <div class="wizard-actions wizard-actions-top">
+                    <button class="btn-back" onclick="goBackFromResult()">
+                        ← ${t.back}
+                    </button>
+                    <button class="btn-restart" onclick="restartWizard()">
+                        🔄 Restart
+                    </button>
+                    <button class="btn-export-path" onclick="exportPath()">
+                        📋 ${t.exportPath}
+                    </button>
+                </div>
+
+                <div class="wizard-answer-block">
+                    <div class="result ${result.type}">
+                        ${result.text}
+                    </div>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    const step = data.steps[currentStep];
     
     content.innerHTML = `
-        <div class="step-number">${currentStep + 1}</div>
-        <div class="question">${step.q}</div>
-        <div class="buttons">
-            <button class="btn-yes" onclick="answer(true)">
-                ✓ ${t.yes}
-            </button>
-            <button class="btn-no" onclick="answer(false)">
-                ✗ ${t.no}
-            </button>
-            ${currentStep > 0 ? `<button class="btn-back" onclick="goBack()">← ${t.back}</button>` : `<button class="btn-back" onclick="showDiagnoses('${currentCategory}')">← ${t.back}</button>`}
+        <div class="wizard-stage">
+            <div class="step-number">${currentStep + 1}</div>
+
+            <div class="question">
+                ${step.q}
+            </div>
+
+            <div class="buttons wizard-actions-top">
+                <button class="btn-yes" onclick="answer(true)">
+                    ✓ ${t.yes}
+                </button>
+                <button class="btn-no" onclick="answer(false)">
+                    ✗ ${t.no}
+                </button>
+                ${currentStep > 0
+                    ? `<button class="btn-back" onclick="goBack()">← ${t.back}</button>`
+                    : `<button class="btn-back" onclick="showDiagnoses('${currentCategory}')">← ${t.back}</button>`}
+            </div>
+
+            ${pathHistory.length > 0 ? `
+                <div class="wizard-answer-block wizard-answer-hint">
+                    <div style="font-weight: 700; margin-bottom: 8px; color: #374151;">
+                        ${t.currentPath}
+                    </div>
+                    ${pathHtml}
+                </div>
+            ` : ''}
         </div>
     `;
 }
@@ -119,6 +141,15 @@ function answer(isYes) {
     
     currentStep = isYes ? step.yes : step.no;
     renderWizard();
+
+    const wizardView = document.getElementById('wizardView');
+    if (wizardView) {
+        wizardView.scrollTop = 0;
+    }
+    const contentArea = document.querySelector('.content-area');
+    if (contentArea) {
+        contentArea.scrollTop = 0;
+    }
 }
 
 function goBack() {
@@ -127,11 +158,22 @@ function goBack() {
         const cat = appData.categories.find(c => c.id === currentCategory);
         const diag = cat.diagnoses.find(d => d.id === currentDiagnosis);
         currentStep = 0;
+
         for (let p of pathHistory) {
             const step = (diag.translations[appData.currentLang] || diag.translations['de']).steps[currentStep];
             currentStep = p.answer === 'yes' ? step.yes : step.no;
         }
+
         renderWizard();
+
+        const wizardView = document.getElementById('wizardView');
+        if (wizardView) {
+            wizardView.scrollTop = 0;
+        }
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            contentArea.scrollTop = 0;
+        }
     }
 }
 
