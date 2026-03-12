@@ -25,13 +25,15 @@ function setupHiddenAdminTrigger() {
     const trigger = document.getElementById('adminTrigger');
     if (!trigger) return;
 
-    const startPress = (event) => {
+    const startPress = () => {
         if (isEditMode || isAdminLoggedIn) return;
         adminLongPressTriggered = false;
+
+        if (adminPressTimer) clearTimeout(adminPressTimer);
         adminPressTimer = setTimeout(() => {
             adminLongPressTriggered = true;
             openPasswordModal();
-        }, 1200);
+        }, 1000);
     };
 
     const endPress = () => {
@@ -41,12 +43,10 @@ function setupHiddenAdminTrigger() {
         }
     };
 
-    trigger.addEventListener('mousedown', startPress);
-    trigger.addEventListener('touchstart', startPress, { passive: true });
-    trigger.addEventListener('mouseup', endPress);
-    trigger.addEventListener('mouseleave', endPress);
-    trigger.addEventListener('touchend', endPress);
-    trigger.addEventListener('touchcancel', endPress);
+    trigger.addEventListener('pointerdown', startPress);
+    trigger.addEventListener('pointerup', endPress);
+    trigger.addEventListener('pointerleave', endPress);
+    trigger.addEventListener('pointercancel', endPress);
 }
 
 function logoutAdmin() {
@@ -111,7 +111,7 @@ function openContactModal() {
     document.getElementById('contactWarningSubtext').textContent = ct.warningSubtext;
 
     const smsLabel = document.querySelector('.sms-action span:last-child');
-    if (smsLabel) smsLabel.textContent = ct.smsText;
+    if (smsLabel) smsLabel.textContent = 'SMS';
 
     document.getElementById('contactNotice').innerHTML = `<strong>⚠️</strong> ${ct.notice}`;
     document.getElementById('closeContactBtn').textContent = ct.closeBtn;
