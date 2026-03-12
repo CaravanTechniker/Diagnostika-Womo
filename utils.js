@@ -54,7 +54,7 @@ function selectBrand(brandId) {
 
 function populateExportSelects() {
     const treeSelect = document.getElementById('exportTreeSelect');
-    
+
     treeSelect.innerHTML = appData.categories.flatMap(c => 
         c.diagnoses ? c.diagnoses.map(d => {
             const t = d.translations.sk || d.translations.de;
@@ -66,7 +66,7 @@ function populateExportSelects() {
 function populateReplaceTreeSelect() {
     const select = document.getElementById('replaceTreeSelect');
     const trees = [];
-    
+
     appData.categories.forEach(cat => {
         if (cat.diagnoses) {
             cat.diagnoses.forEach(d => {
@@ -78,7 +78,7 @@ function populateReplaceTreeSelect() {
             });
         }
     });
-    
+
     select.innerHTML = trees.map(t => 
         `<option value="${t.id}">${t.title} (${t.category})</option>`
     ).join('');
