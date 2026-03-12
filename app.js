@@ -466,4 +466,235 @@ function processExport() {
                 contactPhoto: appData.contactPhoto,
                 categoryPhotos: {}
             };
-            appData.categories
+            appData.categories.forEach(c => {
+                if (c.iconPhoto) data.categoryPhotos[c.id] = c.iconPhoto;
+            });
+            break;
+        case 'category':
+            const catId = document.getElementById('exportSelect').value;
+            const cat = appData.categories.find(c => c.id === catId);
+            data = cat;
+            break;
+        case 'tree':
+            const [treeCatId, treeId] = document.getElementById('exportSelect').value.split(':');
+            const treeCat = appData.categories.find(c => c.id === treeCatId);
+            data = treeCat?.diagnoses?.find(d => d.id === treeId);
+            break;
+    }
+    
+    const jsonString = format === 'pretty' ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+    
+    document.getElementById('exportResult').textContent = jsonString;
+    
+    // Kopírovať do schránky
+    navigator.clipboard.writeText(jsonString).then(() => {
+        showNotification('Skopírované do schránky');
+    });
+}
+
+function downloadExport() {
+    const content = document.getElementById('exportResult').textContent;
+    if (!content) {
+        showNotification('Najprv vytvorte export', 'error');
+        return;
+    }
+    
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagnostika-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    showNotification('Súbor stiahnutý');
+}
+
+// ===== POMOCNÉ FUNKCIE =====
+function initBrandGrid(gridId) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    
+    grid.innerHTML = CONFIG.DEVICE_BRANDS.map(brand => `
+        <div class="brand-btn" data-brand="${brand.id}" onclick="selectBrand(this)">
+            ${brand.icon} ${brand.name}
+        </div>
+    `).join('');
+}
+
+function selectBrand(btn) {
+    btn.parentElement.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+}
+
+function clearAllData() {
+    if (!confirm('Naozaj chcete vymazať všetky dáta? Táto akcia je nezvratná!')) return;
+    
+    localStorage.removeItem('diagnostikaData');
+    sessionStorage.removeItem('adminSession');
+    location.reload();
+}
+
+// ===== KONTAKT =====
+function openContactModal() {
+    const lang = appData.currentLang;
+    const ct = CONTACT_TRANSLATIONS[lang] || CONTACT_TRANSLATIONS.de;
+    
+    document.getElementById('contactWarningTitle').textContent = ct.warningTitle;
+    document.getElementById('contactWarningSubtext').textContent = ct.warningSubtext;
+    document.getElementById('contactNotice').innerHTML = `<strong>⚠️</strong> ${ct.notice}`;
+    document.getElementById('closeContactBtn').textContent = ct.closeBtn;
+    
+    updateContactDisplay();
+    document.getElementById('contactModal').classList.add('active');
+}
+
+function closeContactModal() {
+    document.getElementById('contactModal').classList.remove('active');
+}
+
+function openWhatsApp() {
+    window.open('https://wa.me/' + CONFIG.CONTACT.whatsapp, '_blank');
+}
+
+function openSMS() {
+    window.open('sms:' + CONFIG.CONTACT.phone, '_blank');
+}
+
+function openFeedback() {
+    window.location.href = 'mailto:' + CONFIG.CONTACT.email + '?subject=Spatna vazba';
+}
+
+// ===== JAZYKY =====
+function openLangModal() {
+    const modal = document.getElementById('langModal');
+    const options = document.getElementById('langOptions');
+    
+    options.innerHTML = Object.entries(appData.languages).map(([code, lang]) => `
+        <div class="lang-option ${code === appData.currentLang ? 'selected' : ''}" onclick="setLanguage('${code}')">
+            <img src="${CONFIG.FLAG_URLS[code]}" alt="${lang.code}" class="lang-flag">
+            <div class="lang-info">
+                <div class="lang-name">${lang.name}</div>
+                <div class="lang-code">${lang.code}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    modal.classList.add('active');
+}
+
+function closeLangModal() {
+    document.getElementById('langModal').classList.remove('active');
+}
+
+function setLanguage(code) {
+    appData.currentLang = code;
+    
+    const flagImg = document.getElementById('currentFlag');
+    const langSpan = document.getElementById('currentLang');
+    if (flagImg) flagImg.src = CONFIG.FLAG_URLS[code];
+    if (langSpan) langSpan.textContent = appData.languages[code].code;
+    
+    updateLanguage();
+    
+    if (typeof renderCategories === 'function') renderCategories();
+    if (currentCategory && typeof showDiagnoses === 'function') {
+        showDiagnoses(currentCategory);
+    } else if (typeof showCategories === 'function') {
+        showCategories();
+    }
+    
+    saveDataToStorage();
+    closeLangModal();
+    showNotification(`Jazyk: ${appData.languages[code].name}`);
+}
+
+// ===== MANUÁLY =====
+function openManualsModal() {
+    const modal = document.getElementById('langModal');
+    const options = document.getElementById('langOptions');
+
+    options.innerHTML = Object.entries(MANUALS_DATA).map(([key, section]) => `
+        <div class="lang-option" onclick="openManualSection('${key}')">
+            <div class="lang-info">
+                <div class="lang-name">${section.name}</div>
+                <div class="lang-code">${section.items.length} PDF</div>
+            </div>
+        </div>
+    `).join('');
+
+    modal.classList.add('active');
+}
+
+function openManualSection(sectionKey) {
+    const modal = document.getElementById('langModal');
+    const options = document.getElementById('langOptions');
+    const section = MANUALS_DATA[sectionKey];
+
+    if (!section) return;
+
+    if (!section.items.length) {
+        options.innerHTML = `
+            <div class="lang-option selected" onclick="openManualsModal()">
+                <div class="lang-info">
+                    <div class="lang-name">${section.name}</div>
+                    <div class="lang-code">Zatiaľ bez PDF súborov</div>
+                </div>
+            </div>
+            <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
+        `;
+        return;
+    }
+
+    options.innerHTML = `
+        ${section.items.map(item => `
+            <div class="lang-option" onclick="window.open('${item.url}', '_blank')">
+                <div class="lang-info">
+                    <div class="lang-name">${item.title}</div>
+                    <div class="lang-code">PDF</div>
+                </div>
+            </div>
+        `).join('')}
+        <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
+    `;
+}
+
+// ===== NOTIFIKÁCIA =====
+function showNotification(message, type = 'success') {
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'error' ? '#ef4444' : '#10b981'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        z-index: 9999;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        animation: slideDown 0.3s ease;
+        font-size: 15px;
+        max-width: 90%;
+        text-align: center;
+    `;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+}
+
+// ===== INICIALIZÁCIA =====
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    updateLogoDisplay();
+    
+    // Skontrolovať admin session
+    const adminSession = sessionStorage.getItem('adminSession');
+    if (adminSession === 'true') {
+        isAdminLoggedIn = true;
+        document.getElementById('appContainer').classList.add('admin-mode');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        updateAdminButton();
+    }
+});
