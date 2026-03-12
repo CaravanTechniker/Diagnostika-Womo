@@ -15,17 +15,26 @@
 <body>
     <div class="app-wrapper" id="appContainer">
         <div class="container">
-            <!-- Header - zmenšený a kompaktný -->
+            <!-- Header -->
             <div class="header">
                 <div class="header-brand">
                     <div class="logo-icon">🔧</div>
                     <div class="header-text">
                         <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
-                        <div class="header-subtitle">CaravanTechniker</div>
+                        <button class="contact-btn-main" onclick="openContactModal()">
+                            <span>👤</span>
+                            <span>Caravan Techniker am Main</span>
+                        </button>
                     </div>
                 </div>
                 
                 <div class="header-controls">
+                    <!-- VIDITEĽNÉ ADMIN TLAČIDLO -->
+                    <button class="admin-btn" id="adminBtn" onclick="toggleAdmin()">
+                        <span>⚙️</span>
+                        <span class="admin-text">Admin</span>
+                    </button>
+                    
                     <button class="lang-btn" onclick="openLangModal()">
                         <img id="currentFlag" src="https://flagcdn.com/w40/de.png" alt="DE">
                         <span id="currentLang">DE</span>
@@ -33,14 +42,13 @@
                 </div>
             </div>
 
-            <!-- Search Bar - TU JE SKRYTÝ ADMIN TRIGGER (3 sekundy) -->
-            <div class="search-bar" id="adminTrigger">
+            <!-- Search Bar -->
+            <div class="search-bar">
                 <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" data-translate-placeholder="search" placeholder="Hľadať...">
-                <span class="admin-hint">🔒</span>
             </div>
 
-            <!-- Main Menu - zmenšené tlačidlá -->
+            <!-- Main Menu -->
             <div class="main-menu">
                 <button class="menu-btn active" data-section="diagnostic" onclick="showSection('diagnostic')">
                     <span class="icon">🔍</span>
@@ -147,46 +155,46 @@
     <div id="passwordModal" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
-                <span class="modal-title">🔒 Admin</span>
+                <span class="modal-title">🔒 Admin Prihlásenie</span>
                 <button class="modal-close" onclick="closePasswordModal()">×</button>
             </div>
+            <p style="text-align:center;color:var(--text-muted);margin-bottom:16px;font-size:14px;">Zadajte admin heslo</p>
             <input type="password" id="adminPassword" class="password-input" placeholder="Heslo">
             <button class="btn-primary" onclick="checkPassword()">Prihlásiť</button>
         </div>
     </div>
 
-    <!-- Admin Modal -->
-    <div id="adminModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title">⚙️ Admin</span>
-                <button class="modal-close" onclick="closeAdminModal()">×</button>
-            </div>
-            
-            <div class="menu-item" onclick="openImportModal()">
-                <span class="menu-icon">⬆️</span>
+    <!-- Admin Panel - TRVALO OTVORENÝ -->
+    <div id="adminPanel" class="admin-panel hidden">
+        <div class="admin-header">
+            <span>⚙️ Admin Panel</span>
+            <button class="admin-close" onclick="logoutAdmin()">🔒 Odhlásiť</button>
+        </div>
+        <div class="admin-grid">
+            <button class="admin-action" onclick="openImportModal()">
+                <span>⬆️</span>
                 <span>Import</span>
-            </div>
-            <div class="menu-item" onclick="openExportModal()">
-                <span class="menu-icon">⬇️</span>
+            </button>
+            <button class="admin-action" onclick="openExportModal()">
+                <span>⬇️</span>
                 <span>Export</span>
-            </div>
-            <div class="menu-item" onclick="clearAllData()">
-                <span class="menu-icon">🗑️</span>
-                <span>Vymazať všetko</span>
-            </div>
-            <div class="menu-item" onclick="openEditor()">
-                <span class="menu-icon">✏️</span>
+            </button>
+            <button class="admin-action" onclick="clearAllData()">
+                <span>🗑️</span>
+                <span>Vymazať</span>
+            </button>
+            <button class="admin-action" onclick="openEditor()">
+                <span>✏️</span>
                 <span>Editor</span>
-            </div>
-            <div class="menu-item" onclick="openPhotoManager()">
-                <span class="menu-icon">🖼️</span>
-                <span>Správa fotiek</span>
-            </div>
-            <div class="menu-item danger" onclick="logoutAdmin()">
-                <span class="menu-icon">🔒</span>
-                <span>Odhlásiť</span>
-            </div>
+            </button>
+            <button class="admin-action" onclick="openPhotoManager()">
+                <span>🖼️</span>
+                <span>Fotky</span>
+            </button>
+            <button class="admin-action danger" onclick="toggleEditMode()">
+                <span>📝</span>
+                <span>Edit mód</span>
+            </button>
         </div>
     </div>
 
@@ -209,7 +217,7 @@
                 
                 <div class="contact-warning">
                     <div class="contact-warning-icon">🛑</div>
-                    <div class="contact-warning-text" id="contactWarningTitle">NEVOLAJTE MI</div>
+                    <div class="contact-warning-text" id="contactWarningTitle">Prosím NEVOLAJTE MI</div>
                     <div class="contact-warning-subtext" id="contactWarningSubtext">Som pracovne vyťažený a telefón nedvíham</div>
                 </div>
                 
