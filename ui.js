@@ -14,7 +14,7 @@ function init() {
         searchInput.addEventListener('keydown', function (event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                handleSearch(this.value);
+                handleSearch(this.value, true);
                 this.blur();
             }
         });
@@ -488,7 +488,7 @@ function showMeasurementsSection() {
     `;
 }
 
-function handleSearch(query) {
+function handleSearch(query, blurAfterSearch = false) {
     const trimmed = query.trim();
 
     if (!trimmed) {
@@ -537,8 +537,10 @@ function handleSearch(query) {
         }).join('');
     }
 
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.blur();
+    if (blurAfterSearch) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) searchInput.blur();
+    }
 }
 
 function startWizardFromSearch(diagId, catId) {
