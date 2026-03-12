@@ -18,7 +18,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="header-brand">
-                    <div class="logo-icon">🔧</div>
+                    <div class="logo-icon" id="logoIcon" onclick="editLogoPhoto()">🔧</div>
                     <div class="header-text">
                         <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
                         <button class="contact-btn-main" onclick="openContactModal()">
@@ -29,7 +29,6 @@
                 </div>
                 
                 <div class="header-controls">
-                    <!-- VIDITEĽNÉ ADMIN TLAČIDLO -->
                     <button class="admin-btn" id="adminBtn" onclick="toggleAdmin()">
                         <span>⚙️</span>
                         <span class="admin-text">Admin</span>
@@ -38,6 +37,40 @@
                     <button class="lang-btn" onclick="openLangModal()">
                         <img id="currentFlag" src="https://flagcdn.com/w40/de.png" alt="DE">
                         <span id="currentLang">DE</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Admin Panel - TRVALO OTVORENÝ -->
+            <div id="adminPanel" class="admin-panel hidden">
+                <div class="admin-header">
+                    <span>⚙️ Admin Panel</span>
+                    <button class="admin-close" onclick="logoutAdmin()">🔒 Odhlásiť</button>
+                </div>
+                <div class="admin-grid">
+                    <button class="admin-action" onclick="openImportModal()">
+                        <span>⬆️</span>
+                        <span>Import</span>
+                    </button>
+                    <button class="admin-action" onclick="openExportModal()">
+                        <span>⬇️</span>
+                        <span>Export</span>
+                    </button>
+                    <button class="admin-action" onclick="clearAllData()">
+                        <span>🗑️</span>
+                        <span>Vymazať</span>
+                    </button>
+                    <button class="admin-action" onclick="openEditor()">
+                        <span>✏️</span>
+                        <span>Editor</span>
+                    </button>
+                    <button class="admin-action" onclick="openPhotoManager()">
+                        <span>🖼️</span>
+                        <span>Fotky</span>
+                    </button>
+                    <button class="admin-action danger" onclick="toggleEditMode()">
+                        <span>📝</span>
+                        <span>Edit mód</span>
                     </button>
                 </div>
             </div>
@@ -164,40 +197,6 @@
         </div>
     </div>
 
-    <!-- Admin Panel - TRVALO OTVORENÝ -->
-    <div id="adminPanel" class="admin-panel hidden">
-        <div class="admin-header">
-            <span>⚙️ Admin Panel</span>
-            <button class="admin-close" onclick="logoutAdmin()">🔒 Odhlásiť</button>
-        </div>
-        <div class="admin-grid">
-            <button class="admin-action" onclick="openImportModal()">
-                <span>⬆️</span>
-                <span>Import</span>
-            </button>
-            <button class="admin-action" onclick="openExportModal()">
-                <span>⬇️</span>
-                <span>Export</span>
-            </button>
-            <button class="admin-action" onclick="clearAllData()">
-                <span>🗑️</span>
-                <span>Vymazať</span>
-            </button>
-            <button class="admin-action" onclick="openEditor()">
-                <span>✏️</span>
-                <span>Editor</span>
-            </button>
-            <button class="admin-action" onclick="openPhotoManager()">
-                <span>🖼️</span>
-                <span>Fotky</span>
-            </button>
-            <button class="admin-action danger" onclick="toggleEditMode()">
-                <span>📝</span>
-                <span>Edit mód</span>
-            </button>
-        </div>
-    </div>
-
     <!-- Contact Modal -->
     <div id="contactModal" class="modal-overlay">
         <div class="modal">
@@ -207,9 +206,12 @@
             </div>
             
             <div class="contact-modal-content">
-                <div class="contact-photo-large" id="contactModalPhoto" onclick="handleContactPhotoClick()">
+                <div class="contact-photo-large" id="contactModalPhoto" onclick="editContactPhoto()">
                     <img id="contactModalImg" class="hidden">
                     <span id="contactModalText">👤</span>
+                    <div class="photo-edit-overlay" id="contactEditOverlay">
+                        <span>📷</span>
+                    </div>
                 </div>
                 
                 <div class="contact-name">Stanislav Drozd</div>
@@ -241,6 +243,39 @@
         </div>
     </div>
 
+    <!-- Photo Editor Modal - NOVÝ -->
+    <div id="photoEditorModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">🖼️ Upraviť fotku</span>
+                <button class="modal-close" onclick="closePhotoEditor()">×</button>
+            </div>
+            
+            <div class="photo-preview-container">
+                <img id="photoPreview" class="photo-preview">
+                <div class="photo-preview-placeholder" id="photoPlaceholder">
+                    <span>Žiadna fotka</span>
+                </div>
+            </div>
+            
+            <input type="file" id="photoUpload" class="photo-upload" accept="image/*" onchange="handlePhotoSelect(event)">
+            <input type="hidden" id="currentPhotoTarget">
+            <input type="hidden" id="currentPhotoType">
+            
+            <div class="photo-actions">
+                <button class="btn-primary" onclick="document.getElementById('photoUpload').click()">
+                    📂 Vybrať fotku
+                </button>
+                <button class="btn-secondary" onclick="removeCurrentPhoto()">
+                    🗑️ Odstrániť
+                </button>
+                <button class="btn-success" onclick="savePhoto()" id="savePhotoBtn" disabled>
+                    💾 Uložiť
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Language Modal -->
     <div id="langModal" class="modal-overlay">
         <div class="modal">
@@ -269,6 +304,14 @@
                     <div class="import-type-icon">🔧</div>
                     <div class="import-type-label">Chyby</div>
                 </div>
+                <div class="import-type-btn" onclick="selectImportType('manual')">
+                    <div class="import-type-icon">📚</div>
+                    <div class="import-type-label">Manuál</div>
+                </div>
+                <div class="import-type-btn" onclick="selectImportType('photo')">
+                    <div class="import-type-icon">🖼️</div>
+                    <div class="import-type-label">Fotky</div>
+                </div>
             </div>
             
             <div id="importBrandSection" class="hidden">
@@ -279,12 +322,19 @@
             <div class="import-action-box">
                 <div class="import-action-title">Akcia:</div>
                 <select id="importAction">
-                    <option value="new">Nový strom</option>
-                    <option value="replace">Nahradiť existujúci</option>
+                    <option value="new">Nový</option>
+                    <option value="replace">Nahradiť</option>
+                    <option value="merge">Spojiť</option>
                 </select>
             </div>
             
-            <textarea id="importJson" class="input-group" rows="6" placeholder="JSON kód..."></textarea>
+            <textarea id="importJson" class="input-group" rows="8" placeholder="Vložte JSON kód..."></textarea>
+            
+            <div class="import-file-section" id="importFileSection">
+                <div class="import-action-title">Alebo vyberte súbor:</div>
+                <input type="file" id="importFile" accept=".json" onchange="handleImportFile(event)">
+            </div>
+            
             <button class="btn-primary" onclick="processImport()">Importovať</button>
         </div>
     </div>
@@ -299,15 +349,31 @@
             
             <div class="export-options">
                 <label class="radio-option">
-                    <input type="radio" name="exportType" value="all" checked>
-                    <span>Všetko</span>
+                    <input type="radio" name="exportType" value="all" checked onchange="updateExportOptions()">
+                    <span>Všetko (kompletná záloha)</span>
                 </label>
                 <label class="radio-option">
-                    <input type="radio" name="exportType" value="category">
+                    <input type="radio" name="exportType" value="trees" onchange="updateExportOptions()">
+                    <span>Len stromy</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="exportType" value="errors" onchange="updateExportOptions()">
+                    <span>Len chybové kódy</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="exportType" value="manuals" onchange="updateExportOptions()">
+                    <span>Len manuály</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="exportType" value="photos" onchange="updateExportOptions()">
+                    <span>Len fotky (Base64)</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="exportType" value="category" onchange="updateExportOptions()">
                     <span>Konkrétna kategória</span>
                 </label>
                 <label class="radio-option">
-                    <input type="radio" name="exportType" value="tree">
+                    <input type="radio" name="exportType" value="tree" onchange="updateExportOptions()">
                     <span>Konkrétny strom</span>
                 </label>
             </div>
@@ -321,29 +387,22 @@
                 <div class="brand-grid" id="exportBrandGrid"></div>
             </div>
             
-            <button class="btn-primary" onclick="processExport()">Exportovať</button>
-            
-            <div class="code-display" id="exportResult"></div>
-        </div>
-    </div>
-
-    <!-- Photo Modal -->
-    <div id="photoModal" class="modal-overlay">
-        <div class="modal">
-            <div class="modal-header">
-                <span class="modal-title">🖼️ Fotka</span>
-                <button class="modal-close" onclick="closePhotoModal()">×</button>
+            <div class="export-format">
+                <div class="import-action-title">Formát:</div>
+                <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="json" checked>
+                    <span>JSON (pre import)</span>
+                </label>
+                <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="pretty">
+                    <span>JSON (čitateľný)</span>
+                </label>
             </div>
             
-            <input type="file" id="photoUpload" class="photo-upload" accept="image/*" onchange="handlePhotoUpload(event)">
-            <input type="hidden" id="currentPhotoTarget">
+            <button class="btn-primary" onclick="processExport()">📋 Kopírovať do schránky</button>
+            <button class="btn-secondary" onclick="downloadExport()">💾 Stiahnuť súbor</button>
             
-            <button class="btn-primary" onclick="document.getElementById('photoUpload').click()">
-                📂 Vybrať fotku
-            </button>
-            <button class="btn-secondary" onclick="removePhoto()">
-                🗑️ Odstrániť
-            </button>
+            <div class="code-display" id="exportResult"></div>
         </div>
     </div>
 
