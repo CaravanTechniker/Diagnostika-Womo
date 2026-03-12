@@ -12,15 +12,7 @@ const MANUALS_DATA = {
 let adminPressTimer = null;
 let adminLongPressTriggered = false;
 
-// Admin funkcie
-function toggleAdmin() {
-    if (isAdminLoggedIn) {
-        openAdminModal();
-    } else {
-        openPasswordModal();
-    }
-}
-
+// Admin funkcie - SKRYTÉ V SEARCH POLI (3 sekundy)
 function setupHiddenAdminTrigger() {
     const trigger = document.getElementById('adminTrigger');
     if (!trigger) return;
@@ -33,7 +25,7 @@ function setupHiddenAdminTrigger() {
         adminPressTimer = setTimeout(() => {
             adminLongPressTriggered = true;
             openPasswordModal();
-        }, 1000);
+        }, 3000); // 3 SEKUNDY podržanie
     };
 
     const endPress = () => {
@@ -43,10 +35,21 @@ function setupHiddenAdminTrigger() {
         }
     };
 
-    trigger.addEventListener('pointerdown', startPress);
-    trigger.addEventListener('pointerup', endPress);
-    trigger.addEventListener('pointerleave', endPress);
-    trigger.addEventListener('pointercancel', endPress);
+    // Podpora pre touch aj mouse
+    trigger.addEventListener('touchstart', startPress, { passive: true });
+    trigger.addEventListener('touchend', endPress);
+    trigger.addEventListener('touchcancel', endPress);
+    trigger.addEventListener('mousedown', startPress);
+    trigger.addEventListener('mouseup', endPress);
+    trigger.addEventListener('mouseleave', endPress);
+}
+
+function toggleAdmin() {
+    if (isAdminLoggedIn) {
+        openAdminModal();
+    } else {
+        openPasswordModal();
+    }
 }
 
 function logoutAdmin() {
@@ -62,7 +65,7 @@ function toggleEditMode() {
     const container = document.getElementById('appContainer');
     if (isEditMode) {
         container.classList.add('admin-mode');
-        alert('Režim úprav zapnutý');
+        showNotification('Režim úprav zapnutý');
     } else {
         container.classList.remove('admin-mode');
     }
@@ -73,6 +76,7 @@ function toggleEditMode() {
 function openPasswordModal() {
     document.getElementById('passwordModal').classList.add('active');
     document.getElementById('adminPassword').value = '';
+    document.getElementById('adminPassword').focus();
 }
 
 function closePasswordModal() {
@@ -88,8 +92,9 @@ function checkPassword() {
         updateAdminStatus();
         closePasswordModal();
         openAdminModal();
+        showNotification('Prihlásený ako admin');
     } else {
-        alert('Nespravne heslo!');
+        showNotification('Nesprávne heslo!', 'error');
         document.getElementById('adminPassword').value = '';
     }
 }
@@ -102,6 +107,28 @@ function closeAdminModal() {
     document.getElementById('adminModal').classList.remove('active');
 }
 
+// Notifikácia
+function showNotification(message, type = 'success') {
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'error' ? '#ef4444' : '#10b981'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-weight: 700;
+        z-index: 9999;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        animation: slideDown 0.3s ease;
+    `;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3000);
+}
+
 // Kontakt funkcie
 function openContactModal() {
     const lang = appData.currentLang;
@@ -109,10 +136,6 @@ function openContactModal() {
     
     document.getElementById('contactWarningTitle').textContent = ct.warningTitle;
     document.getElementById('contactWarningSubtext').textContent = ct.warningSubtext;
-
-    const smsLabel = document.querySelector('.sms-action span:last-child');
-    if (smsLabel) smsLabel.textContent = 'SMS';
-
     document.getElementById('contactNotice').innerHTML = `<strong>⚠️</strong> ${ct.notice}`;
     document.getElementById('closeContactBtn').textContent = ct.closeBtn;
     
@@ -135,7 +158,7 @@ function openFeedback() {
     window.location.href = 'mailto:' + CONFIG.CONTACT.email + '?subject=Spatna vazba';
 }
 
-// Jazykové funkcie
+// Jazykové funkcie - OPRAVENÉ
 function openLangModal() {
     const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
@@ -159,23 +182,31 @@ function closeLangModal() {
 
 function setLanguage(code) {
     appData.currentLang = code;
-    updateFlagDisplay();
+    
+    // Aktualizácia vlajky
+    const flagImg = document.getElementById('currentFlag');
+    const langSpan = document.getElementById('currentLang');
+    if (flagImg) flagImg.src = CONFIG.FLAG_URLS[code];
+    if (langSpan) langSpan.textContent = appData.languages[code].code;
+    
+    // Aktualizácia textov
     updateLanguage();
-
+    
+    // Re-render kategórií
     if (typeof renderCategories === 'function') {
         renderCategories();
     }
-
-    if (currentDiagnosis && typeof renderWizard === 'function') {
-        renderWizard();
-    } else if (currentCategory && typeof showDiagnoses === 'function') {
+    
+    // Re-render aktuálnej sekcie
+    if (currentCategory && typeof showDiagnoses === 'function') {
         showDiagnoses(currentCategory);
     } else if (typeof showCategories === 'function') {
         showCategories();
     }
-
+    
     saveDataToStorage();
     closeLangModal();
+    showNotification(`Jazyk zmenený na ${appData.languages[code].name}`);
 }
 
 // Manuály
@@ -207,12 +238,11 @@ function openManualSection(sectionKey) {
             <div class="lang-option selected" onclick="openManualsModal()">
                 <div class="lang-info">
                     <div class="lang-name">${section.name}</div>
-                    <div class="lang-code">Zatial bez PDF suborov</div>
+                    <div class="lang-code">Zatiaľ bez PDF súborov</div>
                 </div>
             </div>
-            <button class="btn-secondary" onclick="openManualsModal()">Spat</button>
+            <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
         `;
-        modal.classList.add('active');
         return;
     }
 
@@ -225,10 +255,8 @@ function openManualSection(sectionKey) {
                 </div>
             </div>
         `).join('')}
-        <button class="btn-secondary" onclick="openManualsModal()">Spat</button>
+        <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
     `;
-
-    modal.classList.add('active');
 }
 
 // Foto funkcie
@@ -236,11 +264,6 @@ function handleHeaderIconClick() {
     if (adminLongPressTriggered) {
         adminLongPressTriggered = false;
         return;
-    }
-
-    if (isEditMode || isAdminLoggedIn) {
-        document.getElementById('currentPhotoTarget').value = 'header';
-        document.getElementById('photoModal').classList.add('active');
     }
 }
 
@@ -253,7 +276,7 @@ function handleContactPhotoClick() {
 
 function editCategoryPhoto(catId) {
     if (!isEditMode && !isAdminLoggedIn) return;
-    event.stopPropagation();
+    if (event) event.stopPropagation();
     document.getElementById('currentPhotoTarget').value = 'category:' + catId;
     document.getElementById('photoModal').classList.add('active');
 }
@@ -269,12 +292,7 @@ function handlePhotoUpload(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const target = document.getElementById('currentPhotoTarget').value;
-        if (target === 'header') {
-           appData.headerPhoto = e.target.result;
-            document.getElementById('headerIconImg').src = e.target.result;
-            document.getElementById('headerIconImg').classList.remove('hidden');
-            document.getElementById('headerIconText').classList.add('hidden');
-        } else if (target === 'contact') {
+        if (target === 'contact') {
             appData.contactPhoto = e.target.result;
             document.getElementById('contactBtnImg').src = e.target.result;
             document.getElementById('contactBtnImg').classList.remove('hidden');
@@ -286,23 +304,20 @@ function handlePhotoUpload(event) {
             const catId = target.split(':')[1];
             const cat = appData.categories.find(c => c.id === catId);
             if (cat) {
-               cat.iconPhoto = e.target.result;
+                cat.iconPhoto = e.target.result;
                 if (typeof renderCategories === 'function') renderCategories();
             }
         }
         saveDataToStorage();
         closePhotoModal();
+        showNotification('Fotka uložená');
     };
     reader.readAsDataURL(file);
 }
 
 function removePhoto() {
     const target = document.getElementById('currentPhotoTarget').value;
-    if (target === 'header') {
-        appData.headerPhoto = null;
-        document.getElementById('headerIconImg').classList.add('hidden');
-        document.getElementById('headerIconText').classList.remove('hidden');
-    } else if (target === 'contact') {
+    if (target === 'contact') {
         appData.contactPhoto = null;
         document.getElementById('contactBtnImg').classList.add('hidden');
         document.getElementById('contactBtnText').classList.remove('hidden');
@@ -318,6 +333,7 @@ function removePhoto() {
     }
     saveDataToStorage();
     closePhotoModal();
+    showNotification('Fotka odstránená');
 }
 
 // Inicializácia
