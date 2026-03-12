@@ -7,40 +7,52 @@ const UI_TRANSLATIONS = {
         admin: 'Admin',
         import: 'Import',
         export: 'Export',
-        clear: 'Loschen',
+        clear: 'Loeschen',
         editor: 'Editor',
         logout: 'Abmelden',
         currentPath: 'WEG',
         yes: 'Ja',
         no: 'Nein',
-        back: 'Zuruck',
+        back: 'Zurueck',
         exportAll: 'Gesamte Datenbank',
         exportTree: 'Baum exportieren',
         exportCategory: 'Kategorie exportieren',
         cancel: 'Abbrechen',
         exportPath: 'Weg exportieren',
-        search: 'Suchen'
+        search: 'Suchen',
+        diagnosticMenu: 'Diagnose',
+        errorsMenu: 'Fehler',
+        devicesMenu: 'Geraete',
+        measurementsMenu: 'Messungen',
+        eblMenu: 'EBL',
+        manualsMenu: 'Handbuecher'
     },
     sk: {
         appTitle: 'Diagnostika Autokaravanu',
-        categories: 'Kategorie',
-        feedback: 'Spatna vazba',
+        categories: 'Kategórie',
+        feedback: 'Spätná väzba',
         admin: 'Admin',
         import: 'Import',
         export: 'Export',
-        clear: 'Vymazat',
+        clear: 'Vymazať',
         editor: 'Editor',
-        logout: 'Odhlasit',
+        logout: 'Odhlásiť',
         currentPath: 'CESTA',
-        yes: 'Ano',
+        yes: 'Áno',
         no: 'Nie',
-        back: 'Spat',
-        exportAll: 'Cela databaza',
-        exportTree: 'Konkretny strom',
-        exportCategory: 'Kategoria',
-        cancel: 'Zrusit',
-        exportPath: 'Exportovat cestu',
-        search: 'Hladat'
+        back: 'Späť',
+        exportAll: 'Celá databáza',
+        exportTree: 'Konkrétny strom',
+        exportCategory: 'Kategória',
+        cancel: 'Zrušiť',
+        exportPath: 'Exportovať cestu',
+        search: 'Hľadať',
+        diagnosticMenu: 'Diagnostika',
+        errorsMenu: 'Chyby',
+        devicesMenu: 'Zariadenia',
+        measurementsMenu: 'Merania',
+        eblMenu: 'EBL',
+        manualsMenu: 'Manuály'
     },
     en: {
         appTitle: 'RV Diagnostic',
@@ -61,7 +73,13 @@ const UI_TRANSLATIONS = {
         exportCategory: 'Category',
         cancel: 'Cancel',
         exportPath: 'Export path',
-        search: 'Search'
+        search: 'Search',
+        diagnosticMenu: 'Diagnostic',
+        errorsMenu: 'Errors',
+        devicesMenu: 'Devices',
+        measurementsMenu: 'Measurements',
+        eblMenu: 'EBL',
+        manualsMenu: 'Manuals'
     },
     it: {
         appTitle: 'Diagnosi Camper',
@@ -82,11 +100,17 @@ const UI_TRANSLATIONS = {
         exportCategory: 'Categoria',
         cancel: 'Annulla',
         exportPath: 'Esporta percorso',
-        search: 'Cerca'
+        search: 'Cerca',
+        diagnosticMenu: 'Diagnosi',
+        errorsMenu: 'Errori',
+        devicesMenu: 'Dispositivi',
+        measurementsMenu: 'Misurazioni',
+        eblMenu: 'EBL',
+        manualsMenu: 'Manuali'
     },
     fr: {
         appTitle: 'Diagnostic Camping-car',
-        categories: 'Categories',
+        categories: 'Catégories',
         feedback: 'Retour',
         admin: 'Admin',
         import: 'Importer',
@@ -103,7 +127,13 @@ const UI_TRANSLATIONS = {
         exportCategory: 'Categorie',
         cancel: 'Annuler',
         exportPath: 'Exporter chemin',
-        search: 'Rechercher'
+        search: 'Rechercher',
+        diagnosticMenu: 'Diagnostic',
+        errorsMenu: 'Erreurs',
+        devicesMenu: 'Appareils',
+        measurementsMenu: 'Mesures',
+        eblMenu: 'EBL',
+        manualsMenu: 'Manuels'
     },
     es: {
         appTitle: 'Diagnostico Autocaravana',
@@ -124,7 +154,13 @@ const UI_TRANSLATIONS = {
         exportCategory: 'Categoria',
         cancel: 'Cancelar',
         exportPath: 'Exportar ruta',
-        search: 'Buscar'
+        search: 'Buscar',
+        diagnosticMenu: 'Diagnostico',
+        errorsMenu: 'Errores',
+        devicesMenu: 'Dispositivos',
+        measurementsMenu: 'Mediciones',
+        eblMenu: 'EBL',
+        manualsMenu: 'Manuales'
     }
 };
 
@@ -134,14 +170,14 @@ const CONTACT_TRANSLATIONS = {
         warningTitle: 'BITTE NICHT ANRUFEN',
         warningSubtext: 'Ich bin beruflich stark eingespannt und nehme keine Anrufe entgegen',
         smsText: 'SMS',
-        notice: 'Wichtig: Ich nehme keine Telefonanrufe entgegen. Nur schriftliche oder Sprachnachrichten über WhatsApp oder SMS. Danke für Ihr Verständnis.',
-        closeBtn: 'Schließen'
+        notice: 'Wichtig: Ich nehme keine Telefonanrufe entgegen. Nur schriftliche oder Sprachnachrichten ueber WhatsApp oder SMS. Danke fuer Ihr Verstaendnis.',
+        closeBtn: 'Schliessen'
     },
     sk: {
         warningTitle: 'NEVOLAJTE MI',
         warningSubtext: 'Som pracovne vyťažený a telefón nedvíham',
         smsText: 'SMS',
-        notice: 'Dôležité: Telefonické hovory neprijímam. Iba písomné, alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.',
+        notice: 'Dôležité: Telefonické hovory neprijímam. Iba písomné alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.',
         closeBtn: 'Zavrieť'
     },
     it: {
@@ -153,16 +189,16 @@ const CONTACT_TRANSLATIONS = {
     },
     fr: {
         warningTitle: 'NE PAS APPELER',
-        warningSubtext: 'Je suis occupé professionnellement et je ne décroche pas',
+        warningSubtext: 'Je suis occupe professionnellement et je ne decroche pas',
         smsText: 'SMS',
-        notice: 'Important: Je ne prends pas les appels téléphoniques. Uniquement des messages écrits ou vocaux via WhatsApp ou SMS. Merci de votre compréhension.',
+        notice: 'Important: Je ne prends pas les appels telephoniques. Uniquement des messages ecrits ou vocaux via WhatsApp ou SMS. Merci de votre comprehension.',
         closeBtn: 'Fermer'
     },
     es: {
         warningTitle: 'NO LLAMAR',
-        warningSubtext: 'Estoy ocupado con el trabajo y no cojo el teléfono',
+        warningSubtext: 'Estoy ocupado con el trabajo y no cojo el telefono',
         smsText: 'SMS',
-        notice: 'Importante: No acepto llamadas telefónicas. Solo mensajes escritos o de voz por WhatsApp o SMS. Gracias por su comprensión.',
+        notice: 'Importante: No acepto llamadas telefonicas. Solo mensajes escritos o de voz por WhatsApp o SMS. Gracias por su comprension.',
         closeBtn: 'Cerrar'
     },
     en: {
