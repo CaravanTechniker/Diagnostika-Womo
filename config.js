@@ -2,7 +2,7 @@
 const CONFIG = {
     ADMIN_PASSWORD: '1310',
     VERSION: '5.1',
-    
+
     FLAG_URLS: {
         de: 'https://flagcdn.com/w40/de.png',
         sk: 'https://flagcdn.com/w40/sk.png',
@@ -11,7 +11,7 @@ const CONFIG = {
         es: 'https://flagcdn.com/w40/es.png',
         en: 'https://flagcdn.com/w40/gb.png'
     },
-    
+
     CONTACT: {
         name: 'Stanislav Drozd',
         role: 'CaravanTechniker am Main',
@@ -19,7 +19,7 @@ const CONFIG = {
         phone: '+4915163812554',
         email: 'caravantechnikerammain@gmail.com'
     },
-    
+
     DEVICE_BRANDS: [
         { id: 'truma', name: 'Truma', icon: '🔥' },
         { id: 'thetford', name: 'Thetford', icon: '🚽' },
@@ -32,7 +32,7 @@ const CONFIG = {
         { id: 'cbe', name: 'CBE', icon: '⚡' },
         { id: 'other', name: 'Iné', icon: '🔧' }
     ],
-    
+
     ELECTRIC_SUBCATEGORIES: [
         { id: 'router', name: 'Hlavné routery', icon: '🌐' },
         { id: 'battery', name: 'Batéria a BMS', icon: '🔋' },
