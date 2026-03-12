@@ -23,13 +23,13 @@ function closeImportModal() {
 
 function selectImportType(type) {
     document.getElementById('selectedImportType').value = type;
-    
+
     if (type === 'tree') {
         document.getElementById('importStep1').classList.add('hidden');
         document.getElementById('importTreeStep').classList.remove('hidden');
         document.getElementById('importErrorStep').classList.add('hidden');
         populateReplaceTreeSelect();
-        
+
         document.querySelectorAll('input[name="treeImportAction"]').forEach(radio => {
             radio.addEventListener('change', function() {
                 document.getElementById('replaceTreeSelect').style.display = this.value === 'replace' ? 'block' : 'none';
@@ -51,12 +51,12 @@ function backToImportStep1() {
 function doExport() {
     const treeId = document.getElementById('exportTreeSelect').value;
     const dataToExport = findTree(treeId);
-    
+
     if (!dataToExport) {
         alert('Strom nebol nájdený!');
         return;
     }
-    
+
     const json = JSON.stringify(dataToExport, null, 2);
     document.getElementById('exportCodeDisplay').textContent = json;
     document.getElementById('exportCodeModal').classList.add('active');
@@ -102,7 +102,7 @@ function isEblTree(data) {
         data?.device,
         data?.brand
     ].map(normalizeImportText).join(' ');
-    
+
     return (
         haystack.includes('ebl') ||
         haystack.includes('nordelettronica') ||
@@ -135,38 +135,38 @@ function doImportTree() {
         alert('Vložte kód!');
         return;
     }
-    
+
     try {
         const data = JSON.parse(code);
         const action = document.querySelector('input[name="treeImportAction"]:checked').value;
-        
+
         if (action === 'new') {
             if (!data.id || typeof data.id !== 'string' || !data.id.trim()) {
                 data.id = 'imported-' + Date.now();
             }
-            
+
             removeDiagnosisFromAllCategories(data.id);
-            
+
             const targetCat = getImportTargetCategory(data);
             if (!targetCat.diagnoses) targetCat.diagnoses = [];
             targetCat.diagnoses.push(data);
         } else {
             const replaceId = document.getElementById('replaceTreeSelect').value;
             let replaced = false;
-            
+
             removeDiagnosisFromAllCategories(replaceId);
             data.id = replaceId;
-            
+
             const targetCat = getImportTargetCategory(data);
             if (!targetCat.diagnoses) targetCat.diagnoses = [];
             targetCat.diagnoses.push(data);
             replaced = true;
-            
+
             if (!replaced) {
                 throw new Error('Nepodarilo sa nahradiť vybraný strom.');
             }
         }
-        
+
         saveDataToStorage();
         alert('Import úspešný!');
         renderCategories();
@@ -180,7 +180,7 @@ function doImportTree() {
 function handleTreeFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = function(e) {
         document.getElementById('importTreeCode').value = e.target.result;
@@ -192,24 +192,24 @@ function doImportErrorCodes() {
     const code = document.getElementById('importErrorCode').value;
     const brandId = document.getElementById('selectedBrand').value;
     const model = document.getElementById('importDeviceModel').value;
-    
+
     if (!brandId) {
         alert('Vyberte značku!');
         return;
     }
-    
+
     if (!code.trim()) {
         alert('Vložte kód!');
         return;
     }
-    
+
     try {
         const data = JSON.parse(code);
-        
+
         if (!appData.errorCodes) appData.errorCodes = {};
-        
+
         const newCodes = Array.isArray(data) ? data : (data.codes || []);
-        
+
         newCodes.forEach(ec => {
             appData.errorCodes[ec.code] = {
                 ...ec,
@@ -218,7 +218,7 @@ function doImportErrorCodes() {
                 model: model || ''
             };
         });
-        
+
         saveDataToStorage();
         alert('Import úspešný!');
         closeImportModal();
@@ -230,7 +230,7 @@ function doImportErrorCodes() {
 function handleErrorFileImport(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
+
     const reader = new FileReader();
     reader.onload = function(e) {
         document.getElementById('importErrorCode').value = e.target.result;
@@ -240,10 +240,10 @@ function handleErrorFileImport(event) {
 
 function clearAllData() {
     if (!confirm('Naozaj vymazať všetko?')) return;
-    
+
     appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
     saveDataToStorage();
-    
+
     renderCategories();
     populateExportSelects();
     loadPhotos();
