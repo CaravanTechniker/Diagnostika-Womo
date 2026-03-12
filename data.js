@@ -142,7 +142,7 @@ function findErrorCode(code) {
     if (appData.errorCodes && appData.errorCodes[code]) {
         return appData.errorCodes[code];
     }
-    
+
     for (let cat of appData.categories) {
         if (cat.errorCodeBrands) {
             for (let brand in cat.errorCodeBrands) {
@@ -152,6 +152,6 @@ function findErrorCode(code) {
             }
         }
     }
-    
+
     return null;
 }
