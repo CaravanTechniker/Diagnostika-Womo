@@ -1,7 +1,7 @@
 // Konfigurácia aplikácie
 const CONFIG = {
     ADMIN_PASSWORD: '1310',
-    VERSION: '5.1',
+    VERSION: '5.5',
 
     FLAG_URLS: {
         de: 'https://flagcdn.com/w40/de.png',
@@ -159,7 +159,7 @@ const TREE_TO_SUBCATEGORY = {
     'ebl_vnutorna_cesta_spalena': 'ebl'
 };
 
-// Default dáta aplikácie
+// Default dáta aplikácie - VŠETKY KATEGÓRIE PODĽA OBRÁZKA
 const DEFAULT_APP_DATA = {
     languages: {
         de: { name: 'Deutsch', code: 'DE' },
