@@ -10,25 +10,19 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="app-wrapper" id="appContainer">
         <div class="container">
-            <!-- Header -->
+            <!-- Header - zmenšený a kompaktný -->
             <div class="header">
-                <div class="header-icon" id="adminTrigger">
-                    <img id="headerIconImg" class="hidden">
-                    <span id="headerIconText">🔧</span>
-                    <span class="edit-badge">UPRAVIT</span>
-                </div>
-                
-                <div class="header-info">
-                    <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
-                    <button class="contact-btn-main" onclick="openContactModal()">
-                        <img id="contactBtnImg" class="hidden">
-                        <span id="contactBtnText">👤</span>
-                        <span data-translate="contact">Kontakt</span>
-                    </button>
+                <div class="header-brand">
+                    <div class="logo-icon">🔧</div>
+                    <div class="header-text">
+                        <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
+                        <div class="header-subtitle">CaravanTechniker</div>
+                    </div>
                 </div>
                 
                 <div class="header-controls">
@@ -39,24 +33,25 @@
                 </div>
             </div>
 
-            <!-- Search -->
-            <div class="search-bar">
-                <span>🔍</span>
+            <!-- Search Bar - TU JE SKRYTÝ ADMIN TRIGGER (3 sekundy) -->
+            <div class="search-bar" id="adminTrigger">
+                <span class="search-icon">🔍</span>
                 <input type="text" id="searchInput" data-translate-placeholder="search" placeholder="Hľadať...">
+                <span class="admin-hint">🔒</span>
             </div>
 
-            <!-- Main Menu -->
+            <!-- Main Menu - zmenšené tlačidlá -->
             <div class="main-menu">
                 <button class="menu-btn active" data-section="diagnostic" onclick="showSection('diagnostic')">
                     <span class="icon">🔍</span>
                     <span data-translate="diagnostic">Diagnostika</span>
                 </button>
                 <button class="menu-btn" data-section="errorcodes" onclick="showSection('errorcodes')">
-                    <span class="icon">⚡</span>
-                    <span data-translate="errorCodes">Chybové kódy</span>
+                    <span class="icon">⚠️</span>
+                    <span data-translate="errorCodes">Chyby</span>
                 </button>
                 <button class="menu-btn" data-section="devices" onclick="showSection('devices')">
-                    <span class="icon">🔧</span>
+                    <span class="icon">🔌</span>
                     <span data-translate="devices">Zariadenia</span>
                 </button>
                 <button class="menu-btn" data-section="measurements" onclick="showSection('measurements')">
@@ -79,7 +74,7 @@
                 <div id="categoriesView" class="categories-card">
                     <div class="categories-header">
                         <div class="categories-title">
-                            <span>☰</span>
+                            <span class="title-icon">☰</span>
                             <span data-translate="categories">Kategórie</span>
                         </div>
                     </div>
@@ -90,7 +85,7 @@
                 <div id="electricView" class="categories-card hidden">
                     <div class="categories-header">
                         <div class="categories-title">
-                            <span>⚡</span>
+                            <span class="title-icon">⚡</span>
                             <span>Elektrina</span>
                         </div>
                     </div>
@@ -111,7 +106,7 @@
                 <div id="errorCodesView" class="categories-card hidden">
                     <div class="categories-header">
                         <div class="categories-title">
-                            <span>⚡</span>
+                            <span class="title-icon">⚠️</span>
                             <span data-translate="errorCodes">Chybové kódy</span>
                         </div>
                     </div>
@@ -143,7 +138,7 @@
 
             <!-- Status Bar -->
             <div class="status-bar">
-                <span>v5.4</span>
+                <span>v5.5</span>
             </div>
         </div>
     </div>
@@ -169,27 +164,27 @@
             </div>
             
             <div class="menu-item" onclick="openImportModal()">
-                <span>⬆️</span>
+                <span class="menu-icon">⬆️</span>
                 <span>Import</span>
             </div>
             <div class="menu-item" onclick="openExportModal()">
-                <span>⬇️</span>
+                <span class="menu-icon">⬇️</span>
                 <span>Export</span>
             </div>
             <div class="menu-item" onclick="clearAllData()">
-                <span>🗑️</span>
+                <span class="menu-icon">🗑️</span>
                 <span>Vymazať všetko</span>
             </div>
             <div class="menu-item" onclick="openEditor()">
-                <span>✏️</span>
+                <span class="menu-icon">✏️</span>
                 <span>Editor</span>
             </div>
             <div class="menu-item" onclick="openPhotoManager()">
-                <span>🖼️</span>
+                <span class="menu-icon">🖼️</span>
                 <span>Správa fotiek</span>
             </div>
             <div class="menu-item danger" onclick="logoutAdmin()">
-                <span>🔒</span>
+                <span class="menu-icon">🔒</span>
                 <span>Odhlásiť</span>
             </div>
         </div>
@@ -215,7 +210,7 @@
                 <div class="contact-warning">
                     <div class="contact-warning-icon">🛑</div>
                     <div class="contact-warning-text" id="contactWarningTitle">NEVOLAJTE MI</div>
-                    <div class="contact-warning-subtext" id="contactWarningSubtext">Som pracovne vyťažený</div>
+                    <div class="contact-warning-subtext" id="contactWarningSubtext">Som pracovne vyťažený a telefón nedvíham</div>
                 </div>
                 
                 <div class="contact-actions">
@@ -230,7 +225,7 @@
                 </div>
                 
                 <div class="contact-notice" id="contactNotice">
-                    <strong>⚠️</strong> Telefonické hovory neprijímam. Iba písomné správy.
+                    <strong>⚠️</strong> Telefonické hovory neprijímam. Iba písomné správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.
                 </div>
             </div>
             
