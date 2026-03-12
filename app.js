@@ -1,36 +1,46 @@
-// Hlavný aplikačný súbor
-
-// ===== FOTKY - GLOBÁLNE PREMENNÉ =====
+// ===== PREMIENNÉ =====
+let isAdminLoggedIn = false;
+let isEditMode = false;
 let currentPhotoData = null;
-let currentPhotoTargetType = null;
-let currentPhotoTargetId = null;
+let currentPhotoType = null;
+let currentPhotoId = null;
+let appData = {
+    currentLang: 'de',
+    logoPhoto: null,
+    contactPhoto: null,
+    categories: [
+        { id: 'elektro', icon: '⚡', name: 'Elektrina', diagnoses: [] },
+        { id: 'voda', icon: '💧', name: 'Voda', diagnoses: [] },
+        { id: 'kurenie', icon: '🔥', name: 'Kúrenie', diagnoses: [] },
+        { id: 'chladnicka', icon: '❄️', name: 'Chladnička', diagnoses: [] },
+        { id: 'klimatizacia', icon: '🌡️', name: 'Klimatizácia', diagnoses: [] },
+        { id: 'sattv', icon: '📡', name: 'SAT TV', diagnoses: [] },
+        { id: 'panel', icon: '📟', name: 'Panely', diagnoses: [] },
+        { id: 'ebl', icon: '⚡', name: 'EBL', diagnoses: [] }
+    ],
+    languages: {
+        de: { name: 'Deutsch', code: 'DE', flag: 'https://flagcdn.com/w40/de.png' },
+        sk: { name: 'Slovenčina', code: 'SK', flag: 'https://flagcdn.com/w40/sk.png' },
+        en: { name: 'English', code: 'EN', flag: 'https://flagcdn.com/w40/gb.png' }
+    }
+};
 
-// ===== ADMIN FUNKCIE =====
+// ===== ADMIN =====
 function toggleAdmin() {
     if (isAdminLoggedIn) {
         const panel = document.getElementById('adminPanel');
         panel.classList.toggle('hidden');
-        updateAdminButton();
+        updateAdminBtn();
     } else {
-        openPasswordModal();
+        document.getElementById('passwordModal').classList.add('active');
+        setTimeout(() => document.getElementById('adminPassword').focus(), 100);
     }
 }
 
-function updateAdminButton() {
+function updateAdminBtn() {
     const btn = document.getElementById('adminBtn');
     const panel = document.getElementById('adminPanel');
-    
-    if (isAdminLoggedIn && !panel.classList.contains('hidden')) {
-        btn.classList.add('active');
-    } else {
-        btn.classList.remove('active');
-    }
-}
-
-function openPasswordModal() {
-    document.getElementById('passwordModal').classList.add('active');
-    document.getElementById('adminPassword').value = '';
-    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+    btn.classList.toggle('active', isAdminLoggedIn && !panel.classList.contains('hidden'));
 }
 
 function closePasswordModal() {
@@ -39,60 +49,51 @@ function closePasswordModal() {
 
 function checkPassword() {
     const input = document.getElementById('adminPassword').value;
-    if (input === CONFIG.ADMIN_PASSWORD) {
+    if (input === '1310') {
         isAdminLoggedIn = true;
         sessionStorage.setItem('adminSession', 'true');
         document.getElementById('appContainer').classList.add('admin-mode');
-        
         closePasswordModal();
         document.getElementById('adminPanel').classList.remove('hidden');
-        updateAdminButton();
+        updateAdminBtn();
         showNotification('Prihlásený ako admin');
     } else {
         showNotification('Nesprávne heslo!', 'error');
-        document.getElementById('adminPassword').value = '';
     }
 }
 
 function logoutAdmin() {
     isAdminLoggedIn = false;
+    isEditMode = false;
     sessionStorage.removeItem('adminSession');
     document.getElementById('appContainer').classList.remove('admin-mode');
     document.getElementById('adminPanel').classList.add('hidden');
-    updateAdminButton();
+    updateAdminBtn();
     showNotification('Odhlásený');
 }
 
 function toggleEditMode() {
     isEditMode = !isEditMode;
-    const container = document.getElementById('appContainer');
-    if (isEditMode) {
-        container.classList.add('admin-mode');
-        showNotification('Edit mód zapnutý');
-    } else {
-        container.classList.remove('admin-mode');
-        showNotification('Edit mód vypnutý');
-    }
+    document.getElementById('appContainer').classList.toggle('admin-mode', isEditMode);
+    showNotification(isEditMode ? 'Edit mód zapnutý' : 'Edit mód vypnutý');
 }
 
-// ===== FOTO EDITOR =====
-function openPhotoEditor(type, id = null) {
-    currentPhotoTargetType = type;
-    currentPhotoTargetId = id;
+// ===== PHOTO EDITOR =====
+function openPhotoEditor(type, id) {
+    if (!isAdminLoggedIn && !isEditMode) return;
+    
+    currentPhotoType = type;
+    currentPhotoId = id;
     currentPhotoData = null;
     
-    // Načítať aktuálnu fotku
     let currentPhoto = null;
-    if (type === 'logo') {
-        currentPhoto = appData.logoPhoto;
-    } else if (type === 'contact') {
-        currentPhoto = appData.contactPhoto;
-    } else if (type === 'category') {
+    if (type === 'logo') currentPhoto = appData.logoPhoto;
+    else if (type === 'contact') currentPhoto = appData.contactPhoto;
+    else if (type === 'category') {
         const cat = appData.categories.find(c => c.id === id);
-        currentPhoto = cat ? cat.iconPhoto : null;
+        currentPhoto = cat?.iconPhoto;
     }
     
-    // Zobraziť preview
     const preview = document.getElementById('photoPreview');
     const placeholder = document.getElementById('photoPlaceholder');
     
@@ -112,26 +113,18 @@ function openPhotoEditor(type, id = null) {
 
 function closePhotoEditor() {
     document.getElementById('photoEditorModal').classList.remove('active');
-    currentPhotoData = null;
-    currentPhotoTargetType = null;
-    currentPhotoTargetId = null;
 }
 
-function handlePhotoSelect(event) {
-    const file = event.target.files[0];
+function handlePhotoSelect(e) {
+    const file = e.target.files[0];
     if (!file) return;
     
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = (e) => {
         currentPhotoData = e.target.result;
-        
-        const preview = document.getElementById('photoPreview');
-        const placeholder = document.getElementById('photoPlaceholder');
-        
-        preview.src = currentPhotoData;
-        preview.classList.add('active');
-        placeholder.classList.add('hidden');
-        
+        document.getElementById('photoPreview').src = currentPhotoData;
+        document.getElementById('photoPreview').classList.add('active');
+        document.getElementById('photoPlaceholder').classList.add('hidden');
         document.getElementById('savePhotoBtn').disabled = false;
     };
     reader.readAsDataURL(file);
@@ -139,97 +132,48 @@ function handlePhotoSelect(event) {
 
 function removeCurrentPhoto() {
     currentPhotoData = null;
-    
-    const preview = document.getElementById('photoPreview');
-    const placeholder = document.getElementById('photoPlaceholder');
-    
-    preview.classList.remove('active');
-    placeholder.classList.remove('hidden');
-    
+    document.getElementById('photoPreview').classList.remove('active');
+    document.getElementById('photoPlaceholder').classList.remove('hidden');
     document.getElementById('savePhotoBtn').disabled = true;
 }
 
 function savePhoto() {
-    if (!currentPhotoData) {
-        showNotification('Najprv vyberte fotku', 'error');
-        return;
-    }
+    if (!currentPhotoData) return;
     
-    // Uložiť fotku
-    if (currentPhotoTargetType === 'logo') {
+    if (currentPhotoType === 'logo') {
         appData.logoPhoto = currentPhotoData;
-        updateLogoDisplay();
-    } else if (currentPhotoTargetType === 'contact') {
+        updateLogo();
+    } else if (currentPhotoType === 'contact') {
         appData.contactPhoto = currentPhotoData;
-        updateContactDisplay();
-    } else if (currentPhotoTargetType === 'category') {
-        const cat = appData.categories.find(c => c.id === currentPhotoTargetId);
-        if (cat) {
-            cat.iconPhoto = currentPhotoData;
-            if (typeof renderCategories === 'function') renderCategories();
-        }
+    } else if (currentPhotoType === 'category') {
+        const cat = appData.categories.find(c => c.id === currentPhotoId);
+        if (cat) cat.iconPhoto = currentPhotoData;
     }
     
-    saveDataToStorage();
+    saveData();
+    renderCategories();
     closePhotoEditor();
     showNotification('Fotka uložená');
 }
 
-// ===== EDIT FOTIEK =====
-function editLogoPhoto() {
-    if (!isAdminLoggedIn && !isEditMode) return;
-    openPhotoEditor('logo');
-}
-
-function editContactPhoto() {
-    if (!isAdminLoggedIn && !isEditMode) return;
-    openPhotoEditor('contact');
-}
-
-function editCategoryPhoto(catId) {
-    if (!isAdminLoggedIn && !isEditMode) return;
-    if (event) event.stopPropagation();
+function editLogo() { openPhotoEditor('logo'); }
+function editContactPhoto() { openPhotoEditor('contact'); }
+function editCategoryPhoto(catId, e) {
+    if (e) e.stopPropagation();
     openPhotoEditor('category', catId);
 }
 
-// ===== AKTUALIZÁCIA ZOBRAZENIA =====
-function updateLogoDisplay() {
-    const logoIcon = document.getElementById('logoIcon');
+function updateLogo() {
+    const logo = document.getElementById('logoIcon');
     if (appData.logoPhoto) {
-        logoIcon.innerHTML = `<img src="${appData.logoPhoto}" style="width:100%;height:100%;object-fit:cover;"><span class="edit-badge">✏️</span>`;
+        logo.innerHTML = `<img src="${appData.logoPhoto}" style="width:100%;height:100%;object-fit:cover"><span class="edit-badge">✏️</span>`;
     } else {
-        logoIcon.innerHTML = `🔧<span class="edit-badge">✏️</span>`;
-    }
-}
-
-function updateContactDisplay() {
-    const contactModalImg = document.getElementById('contactModalImg');
-    const contactModalText = document.getElementById('contactModalText');
-    
-    if (appData.contactPhoto) {
-        contactModalImg.src = appData.contactPhoto;
-        contactModalImg.classList.remove('hidden');
-        contactModalText.classList.add('hidden');
-    } else {
-        contactModalImg.classList.add('hidden');
-        contactModalText.classList.remove('hidden');
+        logo.innerHTML = `🔧<span class="edit-badge">✏️</span>`;
     }
 }
 
 // ===== IMPORT/EXPORT =====
-let currentImportType = null;
-
 function openImportModal() {
-    currentImportType = null;
-    document.getElementById('importJson').value = '';
-    document.getElementById('importFile').value = '';
-    document.getElementById('importBrandSection').classList.add('hidden');
-    
-    // Reset výberu
-    document.querySelectorAll('.import-type-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    
     document.getElementById('importModal').classList.add('active');
 }
 
@@ -237,315 +181,100 @@ function closeImportModal() {
     document.getElementById('importModal').classList.remove('active');
 }
 
-function selectImportType(type) {
-    currentImportType = type;
-    
-    document.querySelectorAll('.import-type-btn').forEach(btn => {
-        btn.classList.remove('selected');
-    });
-    event.currentTarget.classList.add('selected');
-    
-    // Zobraziť/skryť brand sekcie
-    if (type === 'error' || type === 'manual') {
-        document.getElementById('importBrandSection').classList.remove('hidden');
-        initBrandGrid('importBrandGrid');
-    } else {
-        document.getElementById('importBrandSection').classList.add('hidden');
-    }
+function selectImportType(btn, type) {
+    document.querySelectorAll('.import-type-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
 }
 
-function handleImportFile(event) {
-    const file = event.target.files[0];
+function handleImportFile(e) {
+    const file = e.target.files[0];
     if (!file) return;
-    
     const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('importJson').value = e.target.result;
-    };
+    reader.onload = (e) => document.getElementById('importJson').value = e.target.result;
     reader.readAsText(file);
 }
 
 function processImport() {
-    const jsonText = document.getElementById('importJson').value.trim();
-    if (!jsonText) {
-        showNotification('Vložte JSON kód', 'error');
-        return;
-    }
+    const text = document.getElementById('importJson').value.trim();
+    if (!text) return showNotification('Vložte JSON', 'error');
     
     try {
-        const data = JSON.parse(jsonText);
-        const action = document.getElementById('importAction').value;
+        const data = JSON.parse(text);
         
-        // Import podľa typu
-        if (currentImportType === 'tree') {
-            importTree(data, action);
-        } else if (currentImportType === 'error') {
-            importErrors(data, action);
-        } else if (currentImportType === 'manual') {
-            importManual(data, action);
-        } else if (currentImportType === 'photo') {
-            importPhotos(data, action);
-        } else {
-            // Kompletný import
-            importComplete(data, action);
-        }
-        
-        saveDataToStorage();
-        closeImportModal();
-        showNotification('Import úspešný');
-        
-        // Refresh
-        if (typeof renderCategories === 'function') renderCategories();
-        
-    } catch (e) {
-        showNotification('Chyba v JSON: ' + e.message, 'error');
-    }
-}
-
-function importTree(data, action) {
-    if (!data.id || !data.translations) {
-        throw new Error('Neplatný formát stromu');
-    }
-    
-    // Nájsť kategóriu
-    let category = appData.categories.find(c => c.id === data.categoryId);
-    if (!category) {
-        category = appData.categories[0]; // Default prvá
-    }
-    
-    if (!category.diagnoses) category.diagnoses = [];
-    
-    const existingIndex = category.diagnoses.findIndex(d => d.id === data.id);
-    
-    if (action === 'replace' && existingIndex >= 0) {
-        category.diagnoses[existingIndex] = data;
-    } else if (action === 'merge' && existingIndex >= 0) {
-        // Spojiť kroky
-        category.diagnoses[existingIndex].steps = {
-            ...category.diagnoses[existingIndex].steps,
-            ...data.steps
-        };
-    } else {
-        category.diagnoses.push(data);
-    }
-}
-
-function importErrors(data, action) {
-    if (!appData.errorCodes) appData.errorCodes = {};
-    
-    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
-    
-    if (!appData.errorCodes[brand]) appData.errorCodes[brand] = [];
-    
-    if (Array.isArray(data)) {
-        if (action === 'replace') {
-            appData.errorCodes[brand] = data;
-        } else {
-            appData.errorCodes[brand] = [...appData.errorCodes[brand], ...data];
-        }
-    } else {
-        appData.errorCodes[brand].push(data);
-    }
-}
-
-function importManual(data, action) {
-    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
-    
-    if (!MANUALS_DATA[brand]) MANUALS_DATA[brand] = { name: brand, items: [] };
-    
-    if (Array.isArray(data)) {
-        if (action === 'replace') {
-            MANUALS_DATA[brand].items = data;
-        } else {
-            MANUALS_DATA[brand].items = [...MANUALS_DATA[brand].items, ...data];
-        }
-    } else {
-        MANUALS_DATA[brand].items.push(data);
-    }
-}
-
-function importPhotos(data, action) {
-    if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
-    if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
-    if (data.categoryPhotos) {
-        Object.entries(data.categoryPhotos).forEach(([catId, photo]) => {
-            const cat = appData.categories.find(c => c.id === catId);
-            if (cat) cat.iconPhoto = photo;
-        });
-    }
-}
-
-function importComplete(data, action) {
-    if (action === 'replace') {
-        // Nahradiť všetko
-        Object.assign(appData, data);
-    } else {
-        // Spojiť
         if (data.categories) {
             data.categories.forEach(newCat => {
-                const existing = appData.categories.find(c => c.id === newCat.id);
-                if (existing) {
-                    existing.diagnoses = [...(existing.diagnoses || []), ...(newCat.diagnoses || [])];
+                const exist = appData.categories.find(c => c.id === newCat.id);
+                if (exist) {
+                    exist.diagnoses = [...(exist.diagnoses||[]), ...(newCat.diagnoses||[])];
                 } else {
                     appData.categories.push(newCat);
                 }
             });
         }
+        if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
+        if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
+        
+        saveData();
+        renderCategories();
+        updateLogo();
+        closeImportModal();
+        showNotification('Import úspešný');
+    } catch(e) {
+        showNotification('Chyba: ' + e.message, 'error');
     }
 }
 
-// ===== EXPORT =====
 function openExportModal() {
-    updateExportOptions();
-    document.getElementById('exportResult').textContent = '';
     document.getElementById('exportModal').classList.add('active');
+    updateExport();
 }
 
 function closeExportModal() {
     document.getElementById('exportModal').classList.remove('active');
 }
 
-function updateExportOptions() {
+function updateExport() {
     const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
-    const selectSection = document.getElementById('exportSelectSection');
-    const brandSection = document.getElementById('exportBrandSection');
+    let data = appData;
     
-    selectSection.classList.add('hidden');
-    brandSection.classList.add('hidden');
-    
-    if (type === 'category') {
-        selectSection.classList.remove('hidden');
-        const select = document.getElementById('exportSelect');
-        select.innerHTML = appData.categories.map(cat => {
-            const t = cat.translations[appData.currentLang] || cat.translations.de;
-            return `<option value="${cat.id}">${t.name}</option>`;
-        }).join('');
-    } else if (type === 'tree') {
-        selectSection.classList.remove('hidden');
-        const select = document.getElementById('exportSelect');
-        let options = '';
-        appData.categories.forEach(cat => {
-            if (cat.diagnoses) {
-                cat.diagnoses.forEach(diag => {
-                    const t = diag.translations[appData.currentLang] || diag.translations.de;
-                    options += `<option value="${cat.id}:${diag.id}">${t.title}</option>`;
-                });
-            }
-        });
-        select.innerHTML = options;
-    } else if (type === 'errors' || type === 'manuals') {
-        brandSection.classList.remove('hidden');
-        initBrandGrid('exportBrandGrid');
+    if (type === 'trees') {
+        data = { categories: appData.categories.map(c => ({id: c.id, diagnoses: c.diagnoses})) };
     }
+    
+    document.getElementById('exportResult').textContent = JSON.stringify(data, null, 2);
 }
 
-function processExport() {
-    const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
-    const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'json';
-    
-    let data = {};
-    
-    switch(type) {
-        case 'all':
-            data = JSON.parse(JSON.stringify(appData));
-            break;
-        case 'trees':
-            data = { categories: appData.categories.map(c => ({ id: c.id, diagnoses: c.diagnoses })) };
-            break;
-        case 'errors':
-            const errorBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = errorBrand ? { [errorBrand]: appData.errorCodes[errorBrand] } : appData.errorCodes;
-            break;
-        case 'manuals':
-            const manualBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = manualBrand ? { [manualBrand]: MANUALS_DATA[manualBrand] } : MANUALS_DATA;
-            break;
-        case 'photos':
-            data = {
-                logoPhoto: appData.logoPhoto,
-                contactPhoto: appData.contactPhoto,
-                categoryPhotos: {}
-            };
-            appData.categories.forEach(c => {
-                if (c.iconPhoto) data.categoryPhotos[c.id] = c.iconPhoto;
-            });
-            break;
-        case 'category':
-            const catId = document.getElementById('exportSelect').value;
-            const cat = appData.categories.find(c => c.id === catId);
-            data = cat;
-            break;
-        case 'tree':
-            const [treeCatId, treeId] = document.getElementById('exportSelect').value.split(':');
-            const treeCat = appData.categories.find(c => c.id === treeCatId);
-            data = treeCat?.diagnoses?.find(d => d.id === treeId);
-            break;
-    }
-    
-    const jsonString = format === 'pretty' ? JSON.stringify(data, null, 2) : JSON.stringify(data);
-    
-    document.getElementById('exportResult').textContent = jsonString;
-    
-    // Kopírovať do schránky
-    navigator.clipboard.writeText(jsonString).then(() => {
-        showNotification('Skopírované do schránky');
-    });
+function copyExport() {
+    const text = document.getElementById('exportResult').textContent;
+    navigator.clipboard.writeText(text).then(() => showNotification('Skopírované'));
 }
 
 function downloadExport() {
-    const content = document.getElementById('exportResult').textContent;
-    if (!content) {
-        showNotification('Najprv vytvorte export', 'error');
-        return;
-    }
-    
-    const blob = new Blob([content], { type: 'application/json' });
+    const text = document.getElementById('exportResult').textContent;
+    const blob = new Blob([text], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `diagnostika-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `export-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    
     showNotification('Súbor stiahnutý');
-}
-
-// ===== POMOCNÉ FUNKCIE =====
-function initBrandGrid(gridId) {
-    const grid = document.getElementById(gridId);
-    if (!grid) return;
-    
-    grid.innerHTML = CONFIG.DEVICE_BRANDS.map(brand => `
-        <div class="brand-btn" data-brand="${brand.id}" onclick="selectBrand(this)">
-            ${brand.icon} ${brand.name}
-        </div>
-    `).join('');
-}
-
-function selectBrand(btn) {
-    btn.parentElement.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-}
-
-function clearAllData() {
-    if (!confirm('Naozaj chcete vymazať všetky dáta? Táto akcia je nezvratná!')) return;
-    
-    localStorage.removeItem('diagnostikaData');
-    sessionStorage.removeItem('adminSession');
-    location.reload();
 }
 
 // ===== KONTAKT =====
 function openContactModal() {
-    const lang = appData.currentLang;
-    const ct = CONTACT_TRANSLATIONS[lang] || CONTACT_TRANSLATIONS.de;
+    const img = document.getElementById('contactModalImg');
+    const text = document.getElementById('contactModalText');
     
-    document.getElementById('contactWarningTitle').textContent = ct.warningTitle;
-    document.getElementById('contactWarningSubtext').textContent = ct.warningSubtext;
-    document.getElementById('contactNotice').innerHTML = `<strong>⚠️</strong> ${ct.notice}`;
-    document.getElementById('closeContactBtn').textContent = ct.closeBtn;
+    if (appData.contactPhoto) {
+        img.src = appData.contactPhoto;
+        img.classList.remove('hidden');
+        text.classList.add('hidden');
+    } else {
+        img.classList.add('hidden');
+        text.classList.remove('hidden');
+    }
     
-    updateContactDisplay();
     document.getElementById('contactModal').classList.add('active');
 }
 
@@ -554,33 +283,26 @@ function closeContactModal() {
 }
 
 function openWhatsApp() {
-    window.open('https://wa.me/' + CONFIG.CONTACT.whatsapp, '_blank');
+    window.open('https://wa.me/4915163812554', '_blank');
 }
 
 function openSMS() {
-    window.open('sms:' + CONFIG.CONTACT.phone, '_blank');
-}
-
-function openFeedback() {
-    window.location.href = 'mailto:' + CONFIG.CONTACT.email + '?subject=Spatna vazba';
+    window.open('sms:+4915163812554', '_blank');
 }
 
 // ===== JAZYKY =====
 function openLangModal() {
-    const modal = document.getElementById('langModal');
-    const options = document.getElementById('langOptions');
-    
-    options.innerHTML = Object.entries(appData.languages).map(([code, lang]) => `
+    const opts = document.getElementById('langOptions');
+    opts.innerHTML = Object.entries(appData.languages).map(([code, lang]) => `
         <div class="lang-option ${code === appData.currentLang ? 'selected' : ''}" onclick="setLanguage('${code}')">
-            <img src="${CONFIG.FLAG_URLS[code]}" alt="${lang.code}" class="lang-flag">
+            <img src="${lang.flag}" class="lang-flag">
             <div class="lang-info">
                 <div class="lang-name">${lang.name}</div>
                 <div class="lang-code">${lang.code}</div>
             </div>
         </div>
     `).join('');
-    
-    modal.classList.add('active');
+    document.getElementById('langModal').classList.add('active');
 }
 
 function closeLangModal() {
@@ -589,112 +311,85 @@ function closeLangModal() {
 
 function setLanguage(code) {
     appData.currentLang = code;
-    
-    const flagImg = document.getElementById('currentFlag');
-    const langSpan = document.getElementById('currentLang');
-    if (flagImg) flagImg.src = CONFIG.FLAG_URLS[code];
-    if (langSpan) langSpan.textContent = appData.languages[code].code;
-    
-    updateLanguage();
-    
-    if (typeof renderCategories === 'function') renderCategories();
-    if (currentCategory && typeof showDiagnoses === 'function') {
-        showDiagnoses(currentCategory);
-    } else if (typeof showCategories === 'function') {
-        showCategories();
-    }
-    
-    saveDataToStorage();
+    const lang = appData.languages[code];
+    document.getElementById('currentFlag').src = lang.flag;
+    document.getElementById('currentLang').textContent = lang.code;
+    saveData();
     closeLangModal();
-    showNotification(`Jazyk: ${appData.languages[code].name}`);
+    showNotification(lang.name);
 }
 
-// ===== MANUÁLY =====
 function openManualsModal() {
-    const modal = document.getElementById('langModal');
-    const options = document.getElementById('langOptions');
+    showNotification('Manuály - pripravuje sa');
+}
 
-    options.innerHTML = Object.entries(MANUALS_DATA).map(([key, section]) => `
-        <div class="lang-option" onclick="openManualSection('${key}')">
-            <div class="lang-info">
-                <div class="lang-name">${section.name}</div>
-                <div class="lang-code">${section.items.length} PDF</div>
+// ===== KATEGÓRIE =====
+function renderCategories() {
+    const list = document.getElementById('categoriesList');
+    list.innerHTML = appData.categories.map(cat => `
+        <div class="category-item" onclick="showCategory('${cat.id}')">
+            <div class="category-icon" onclick="editCategoryPhoto('${cat.id}', event)">
+                ${cat.iconPhoto ? `<img src="${cat.iconPhoto}">` : cat.icon}
+                <span class="edit-badge">✏️</span>
             </div>
+            <div class="category-name">${cat.name}</div>
+            <div class="category-count">${cat.diagnoses?.length || 0} stromov</div>
         </div>
     `).join('');
-
-    modal.classList.add('active');
 }
 
-function openManualSection(sectionKey) {
-    const modal = document.getElementById('langModal');
-    const options = document.getElementById('langOptions');
-    const section = MANUALS_DATA[sectionKey];
+function showCategory(id) {
+    showNotification('Kategória: ' + id);
+}
 
-    if (!section) return;
+function showSection(section) {
+    document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
 
-    if (!section.items.length) {
-        options.innerHTML = `
-            <div class="lang-option selected" onclick="openManualsModal()">
-                <div class="lang-info">
-                    <div class="lang-name">${section.name}</div>
-                    <div class="lang-code">Zatiaľ bez PDF súborov</div>
-                </div>
-            </div>
-            <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
-        `;
-        return;
+// ===== POMOCNÉ =====
+function showNotification(msg, type) {
+    const n = document.createElement('div');
+    n.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${type==='error'?'#ef4444':'#10b981'};color:white;padding:16px 24px;border-radius:12px;font-weight:700;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,0.3)`;
+    n.textContent = msg;
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 3000);
+}
+
+function clearAllData() {
+    if (!confirm('Vymazať všetko?')) return;
+    localStorage.removeItem('diagnostikaData');
+    location.reload();
+}
+
+function saveData() {
+    localStorage.setItem('diagnostikaData', JSON.stringify(appData));
+}
+
+function loadData() {
+    const saved = localStorage.getItem('diagnostikaData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        appData = { ...appData, ...data };
     }
-
-    options.innerHTML = `
-        ${section.items.map(item => `
-            <div class="lang-option" onclick="window.open('${item.url}', '_blank')">
-                <div class="lang-info">
-                    <div class="lang-name">${item.title}</div>
-                    <div class="lang-code">PDF</div>
-                </div>
-            </div>
-        `).join('')}
-        <button class="btn-secondary" onclick="openManualsModal()">Späť</button>
-    `;
 }
 
-// ===== NOTIFIKÁCIA =====
-function showNotification(message, type = 'success') {
-    const notif = document.createElement('div');
-    notif.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${type === 'error' ? '#ef4444' : '#10b981'};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 12px;
-        font-weight: 700;
-        z-index: 9999;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-        animation: slideDown 0.3s ease;
-        font-size: 15px;
-        max-width: 90%;
-        text-align: center;
-    `;
-    notif.textContent = message;
-    document.body.appendChild(notif);
-    setTimeout(() => notif.remove(), 3000);
+function openFeedback() {
+    window.location.href = 'mailto:caravantechnikerammain@gmail.com?subject=Spatna vazba';
 }
 
-// ===== INICIALIZÁCIA =====
-document.addEventListener('DOMContentLoaded', () => {
-    init();
-    updateLogoDisplay();
+// ===== INIT =====
+function init() {
+    loadData();
+    renderCategories();
+    updateLogo();
     
-    // Skontrolovať admin session
-    const adminSession = sessionStorage.getItem('adminSession');
-    if (adminSession === 'true') {
+    if (sessionStorage.getItem('adminSession') === 'true') {
         isAdminLoggedIn = true;
         document.getElementById('appContainer').classList.add('admin-mode');
         document.getElementById('adminPanel').classList.remove('hidden');
-        updateAdminButton();
+        updateAdminBtn();
     }
-});
+}
+
+document.addEventListener('DOMContentLoaded', init);
