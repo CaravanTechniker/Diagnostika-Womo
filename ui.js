@@ -19,7 +19,7 @@ function init() {
             }
         });
     }
-    
+
     const adminSession = sessionStorage.getItem('adminSession');
     if (adminSession === 'true') {
         isAdminLoggedIn = true;
@@ -30,12 +30,12 @@ function init() {
 function updateLanguage() {
     const lang = appData.currentLang;
     const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.de;
-    
+
     document.querySelectorAll('[data-translate]').forEach(el => {
         const key = el.getAttribute('data-translate');
         if (t[key]) el.textContent = t[key];
     });
-    
+
     const searchInput = document.getElementById('searchInput');
     if (searchInput) searchInput.placeholder = t.search || 'Hľadať...';
 
@@ -223,7 +223,7 @@ function showSection(section) {
     currentSection = section;
     setActiveMenu(section);
     hideAllMainViews();
-    
+
     switch(section) {
         case 'diagnostic':
             showCategories();
@@ -253,19 +253,17 @@ function showMainMenu() {
 function renderCategories() {
     const list = document.getElementById('categoriesList');
     const lang = appData.currentLang;
-    
+
     list.innerHTML = appData.categories.map(cat => {
         const t = cat.translations[lang] || cat.translations['de'];
         const count = cat.diagnoses ? cat.diagnoses.length : 0;
         const countText = getTreeCountText(count);
-        
-        const iconContent = cat.iconPhoto ? 
-            `<img src="${cat.iconPhoto}" alt="">` : 
-            `<span>${cat.icon}</span>`;
-        
+
+        const iconContent = cat.iconPhoto ? `<img src="${cat.iconPhoto}" alt="">` : `${cat.icon}`;
+
         return `
             <div class="category-item" onclick="showCategoryContent('${cat.id}')">
-                <div class="category-icon" onclick="editCategoryPhoto('${cat.id}')">
+                <div class="category-icon" onclick="editCategoryPhoto('${cat.id}'); event.stopPropagation();">
                     ${iconContent}
                     <span class="edit-badge">UPRAVIT</span>
                 </div>
@@ -290,24 +288,22 @@ function showCategoryContent(categoryId) {
 function showElectricSubcategories() {
     hideAllMainViews();
     document.getElementById('electricView').classList.remove('hidden');
-    
+
     const container = document.getElementById('electricSubcategories');
     const electricTitle = document.querySelector('#electricView .categories-title span:last-child');
     if (electricTitle) electricTitle.textContent = getUiText('electricTitle');
-    
+
     container.innerHTML = CONFIG.ELECTRIC_SUBCATEGORIES.map(sub => {
         const elektroCat = appData.categories.find(c => c.id === 'elektro');
-        const count = elektroCat && elektroCat.diagnoses ? 
+        const count = elektroCat && elektroCat.diagnoses ?
             elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === sub.id).length : 0;
-        
+
         return `
             <div class="subcategory-item" onclick="showElectricTrees('${sub.id}')">
                 <span class="subcategory-icon">${sub.icon}</span>
-                <div style="flex: 1;">
-                    <div class="subcategory-name">${sub.name}</div>
-                    <div style="color: #60a5fa; font-size: 0.85em; font-weight: 600;">${getTreeCountText(count)}</div>
-                </div>
-                <span style="color: #9ca3af;">›</span>
+                <span class="subcategory-name">${sub.name}</span>
+                <span style="margin-left:auto;color:var(--primary);font-weight:700;font-size:0.85em;">${getTreeCountText(count)}</span>
+                <span style="color:#94a3b8;">›</span>
             </div>
         `;
     }).join('');
@@ -317,18 +313,18 @@ function showElectricTrees(subcategoryId) {
     currentCategory = 'elektro';
     const elektroCat = appData.categories.find(c => c.id === 'elektro');
     const sub = CONFIG.ELECTRIC_SUBCATEGORIES.find(s => s.id === subcategoryId);
-    
+
     document.getElementById('electricView').classList.add('hidden');
     document.getElementById('diagnosesView').classList.remove('hidden');
-    
+
     document.getElementById('currentCategoryName').textContent = `${getUiText('electricTitle')} › ${sub.name}`;
-    
+
     const list = document.getElementById('diagnosesList');
-    const trees = elektroCat && elektroCat.diagnoses ? 
+    const trees = elektroCat && elektroCat.diagnoses ?
         elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === subcategoryId) : [];
-    
+
     if (trees.length === 0) {
-        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noTrees')}</div>`;
+        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
     } else {
         const lang = appData.currentLang;
         list.innerHTML = trees.map(d => {
@@ -336,7 +332,7 @@ function showElectricTrees(subcategoryId) {
             return `
                 <div class="diagnosis-item" onclick="startWizard('${d.id}')">
                     <div class="diagnosis-title">${dt.title}</div>
-                    <span style="color: #9ca3af;">›</span>
+                    <span style="color:#94a3b8;">›</span>
                 </div>
             `;
         }).join('');
@@ -350,22 +346,22 @@ function showDiagnoses(categoryId) {
 
     const lang = appData.currentLang;
     const t = cat.translations[lang] || cat.translations['de'];
-    
+
     hideAllMainViews();
     document.getElementById('diagnosesView').classList.remove('hidden');
-    
+
     document.getElementById('currentCategoryName').textContent = t.name;
-    
+
     const list = document.getElementById('diagnosesList');
     if (!cat.diagnoses || cat.diagnoses.length === 0) {
-        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noTrees')}</div>`;
+        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
     } else {
         list.innerHTML = cat.diagnoses.map(d => {
             const dt = d.translations[lang] || d.translations['de'];
             return `
                 <div class="diagnosis-item" onclick="startWizard('${d.id}')">
                     <div class="diagnosis-title">${dt.title}</div>
-                    <span style="color: #9ca3af;">›</span>
+                    <span style="color:#94a3b8;">›</span>
                 </div>
             `;
         }).join('');
@@ -388,15 +384,13 @@ function showCategories() {
 function showErrorCodesSection() {
     hideAllMainViews();
     document.getElementById('errorCodesView').classList.remove('hidden');
-    
+
     const content = document.getElementById('errorCodesContent');
     content.innerHTML = `
         <div class="error-search-box">
-            <div style="font-weight: 600; margin-bottom: 10px; color: #374151;">${getUiText('searchErrorCode')}:</div>
-            <input type="text" class="error-search-input" id="errorCodeSearch" placeholder="${getUiText('enterCode')}" onkeypress="if(event.key==='Enter'){ searchErrorCode(this.value); this.blur(); }">
-            <button class="btn-primary" onclick="searchErrorCode(document.getElementById('errorCodeSearch').value)" style="margin-top: 10px;">
-                ${getUiText('searchButton')}
-            </button>
+            <div style="font-weight:700;margin-bottom:10px;">${getUiText('searchErrorCode')}:</div>
+            <input type="text" id="errorCodeInput" class="error-search-input" placeholder="${getUiText('enterCode')}" maxlength="10">
+            <button class="btn-primary" style="margin-top:10px;" onclick="searchErrorCode(document.getElementById('errorCodeInput').value)">${getUiText('searchButton')}</button>
         </div>
         <div id="errorCodeResult"></div>
     `;
@@ -404,10 +398,10 @@ function showErrorCodesSection() {
 
 function searchErrorCode(code) {
     if (!code.trim()) return;
-    
+
     const resultDiv = document.getElementById('errorCodeResult');
     const found = findErrorCode(code.trim().toUpperCase());
-    
+
     if (found) {
         const lang = appData.currentLang;
         const et = found.translations[lang] || found.translations['de'] || found.translations['sk'];
@@ -416,29 +410,32 @@ function searchErrorCode(code) {
             found.severity === 'high' ? getUiText('severityHigh') :
             found.severity === 'medium' ? getUiText('severityMedium') :
             getUiText('severityLow');
-        
+
         resultDiv.innerHTML = `
-            <div style="background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-top: 15px;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                    <span class="error-code" style="font-size: 1.3em;">${found.code}</span>
-                    <span class="error-severity ${severityClass}">${severityText}</span>
+            <div style="background:var(--card);border-radius:14px;padding:15px;border:1px solid #dbe4f0;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                    <span style="font-size:1.3em;font-weight:800;color:var(--primary);">${found.code}</span>
+                    <span style="background:${found.severity === 'high' ? '#fee2e2' : found.severity === 'medium' ? '#fef3c7' : '#dcfce7'};color:${found.severity === 'high' ? '#dc2626' : found.severity === 'medium' ? '#d97706' : '#16a34a'};padding:4px 10px;border-radius:20px;font-size:0.8em;font-weight:700;">${severityText}</span>
                 </div>
-                <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('device')}:</div>
-                    <div style="font-weight: 600;">${found.device}</div>
+                
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('device')}:</div>
+                    <div style="font-weight:700;">${found.device}</div>
                 </div>
-                <div style="margin-bottom: 10px;">
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('description')}:</div>
+                
+                <div style="margin-bottom:12px;">
+                    <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('description')}:</div>
                     <div>${et.description}</div>
                 </div>
+                
                 <div>
-                    <div style="color: #6b7280; font-size: 0.85em; margin-bottom: 4px;">${getUiText('solution')}:</div>
-                    <div>${et.solution}</div>
+                    <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('solution')}:</div>
+                    <div style="background:#f8fbff;padding:12px;border-radius:10px;border-left:3px solid var(--primary);">${et.solution}</div>
                 </div>
             </div>
         `;
     } else {
-        resultDiv.innerHTML = `<div style="text-align: center; padding: 30px; color: #6b7280;">${getUiText('codeNotFound')}</div>`;
+        resultDiv.innerHTML = `<div style="text-align:center;color:#dc2626;padding:20px;font-weight:700;">${getUiText('codeNotFound')}</div>`;
     }
 }
 
@@ -448,7 +445,7 @@ function showDevicesSection() {
     document.getElementById('currentCategoryName').textContent = getUiText('device');
 
     document.getElementById('diagnosesList').innerHTML = `
-        <div style="text-align: center; padding: 24px; color: #6b7280;">
+        <div style="text-align:center;padding:40px 20px;color:var(--muted);">
             ${appData.currentLang === 'sk' ? 'Sekcia zariadení bude doplnená do ďalšej verzie' :
               appData.currentLang === 'de' ? 'Geraetesektion wird in der naechsten Version ergaenzt' :
               appData.currentLang === 'en' ? 'Devices section will be added in the next version' :
@@ -476,15 +473,16 @@ function showMeasurementsSection() {
     const lang = appData.currentLang;
 
     document.getElementById('diagnosesList').innerHTML = `
-        <div style="margin-bottom: 18px; color: #64748b; font-weight: 600;">
-            ${getUiText('measurementsIntro')}
+        <div style="margin-bottom:15px;color:var(--muted);">${getUiText('measurementsIntro')}</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+            ${cards.map(card => `
+                <div class="subcategory-item">
+                    <span style="font-size:1.3em;">${card.icon}</span>
+                    <span style="font-weight:700;">${card.title[lang] || card.title.de}</span>
+                    <span style="margin-left:auto;color:#94a3b8;">›</span>
+                </div>
+            `).join('')}
         </div>
-        ${cards.map(card => `
-            <div class="diagnosis-item" onclick="alert('${card.title[lang] || card.title.de}')">
-                <div class="diagnosis-title">${card.icon} ${card.title[lang] || card.title.de}</div>
-                <span style="color: #9ca3af;">›</span>
-            </div>
-        `).join('')}
     `;
 }
 
@@ -500,10 +498,10 @@ function handleSearch(query, blurAfterSearch = false) {
         }
         return;
     }
-    
+
     const lowerQuery = trimmed.toLowerCase();
     const lang = appData.currentLang;
-    
+
     let results = [];
     appData.categories.forEach(cat => {
         if (cat.diagnoses) {
@@ -515,23 +513,27 @@ function handleSearch(query, blurAfterSearch = false) {
             });
         }
     });
-    
+
     hideAllMainViews();
     document.getElementById('diagnosesView').classList.remove('hidden');
-    
+
     const list = document.getElementById('diagnosesList');
     document.getElementById('currentCategoryName').textContent = `${getUiText('searchResults')}: "${trimmed}"`;
-    
+
     if (results.length === 0) {
-        list.innerHTML = `<div style="text-align: center; padding: 40px; color: #6b7280;">${getUiText('noResults')}</div>`;
+        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noResults')}</div>`;
     } else {
+        const lang = appData.currentLang;
         list.innerHTML = results.map(r => {
             const dt = r.diag.translations[lang] || r.diag.translations['de'];
             const ct = r.cat.translations[lang] || r.cat.translations['de'];
             return `
                 <div class="diagnosis-item" onclick="startWizardFromSearch('${r.diag.id}', '${r.cat.id}')">
-                    <div class="diagnosis-title">${dt.title}</div>
-                    <div style="color: #9ca3af; font-size: 0.85em;">${ct.name}</div>
+                    <div>
+                        <div class="diagnosis-title">${dt.title}</div>
+                        <div style="font-size:0.85em;color:var(--muted);margin-top:2px;">${ct.name}</div>
+                    </div>
+                    <span style="color:#94a3b8;">›</span>
                 </div>
             `;
         }).join('');
