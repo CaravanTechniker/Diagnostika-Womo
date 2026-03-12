@@ -14,7 +14,7 @@ function openEditor() {
 function switchEditorTab(tab) {
     document.querySelectorAll('.editor-tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
-    
+
     if (tab === 'trees') {
         renderEditorTrees();
     } else if (tab === 'languages') {
@@ -27,14 +27,14 @@ function switchEditorTab(tab) {
 function renderEditorTrees() {
     const content = document.getElementById('editorContent');
     content.innerHTML = '<h2 style="margin-bottom: 15px; font-size: 1.2em;">Stromy</h2>';
-    
+
     appData.categories.forEach(cat => {
         if (!cat.diagnoses || cat.diagnoses.length === 0) return;
-        
+
         const catDiv = document.createElement('div');
         catDiv.style.marginBottom = '20px';
         catDiv.innerHTML = `<h3 style="color: #60a5fa; margin-bottom: 10px; font-size: 1em;">${(cat.translations.sk || cat.translations.de).name}</h3>`;
-        
+
         cat.diagnoses.forEach(diag => {
             const diagDiv = document.createElement('div');
             diagDiv.className = 'node-editor';
@@ -46,17 +46,17 @@ function renderEditorTrees() {
             `;
             catDiv.appendChild(diagDiv);
         });
-        
+
         content.appendChild(catDiv);
     });
-    
+
     content.innerHTML += `<button class="btn-save" onclick="showCategories()">Späť</button>`;
 }
 
 function renderEditorLanguages() {
     const content = document.getElementById('editorContent');
     content.innerHTML = '<h2 style="margin-bottom: 15px; font-size: 1.2em;">Jazyky</h2>';
-    
+
     appData.categories.forEach(cat => {
         if (!cat.diagnoses) return;
         cat.diagnoses.forEach(diag => {
@@ -76,14 +76,14 @@ function renderEditorLanguages() {
             content.appendChild(div);
         });
     });
-    
+
     content.innerHTML += `<button class="btn-save" onclick="showCategories()">Späť</button>`;
 }
 
 function renderEditorErrorCodes() {
     const content = document.getElementById('editorContent');
     content.innerHTML = '<h2 style="margin-bottom: 15px; font-size: 1.2em;">Chybové kódy</h2>';
-    
+
     if (!appData.errorCodes || Object.keys(appData.errorCodes).length === 0) {
         content.innerHTML += '<p>Žiadne kódy.</p>';
     } else {
@@ -99,7 +99,7 @@ function renderEditorErrorCodes() {
             content.appendChild(div);
         });
     }
-    
+
     content.innerHTML += `<button class="btn-save" onclick="showCategories()">Späť</button>`;
 }
 
