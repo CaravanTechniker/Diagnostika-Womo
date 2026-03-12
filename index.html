@@ -1,420 +1,165 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diagnostika Autokaravanu</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="app-wrapper">
-        <div class="container" id="appContainer">
-            <div class="header">
-                <div class="header-icon" id="adminTrigger" onclick="handleHeaderIconClick()">
-                    <span id="headerIconText">🔧</span>
-                    <img id="headerIconImg" class="hidden" src="" alt="">
-                    <span class="edit-badge">UPRAVIT</span>
-                </div>
+/* Admin trigger štýly */
+#adminTrigger {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.2s;
+}
 
-                <div class="header-info">
-                    <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
-                    <button class="contact-btn-main" onclick="openContactModal()">
-                        <span id="contactBtnText">👤</span>
-                        <img id="contactBtnImg" class="hidden" src="" alt="">
-                        <span>Caravan Techniker am Main</span>
-                    </button>
-                </div>
+#adminTrigger.pressing {
+    transform: scale(0.9);
+    opacity: 0.8;
+}
 
-                <div class="header-controls">
-                    <button class="lang-btn" onclick="openLangModal()">
-                        <img id="currentLangFlagImg" src="https://flagcdn.com/w40/de.png" alt="DE" style="width: 20px; height: 15px; border-radius: 3px; object-fit: cover;">
-                        <span id="currentLangCode">DE</span>
-                    </button>
-                </div>
-            </div>
+.admin-hint {
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: nowrap;
+    pointer-events: none;
+}
 
-            <div class="search-bar" id="searchBar">
-                <span>🔍</span>
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Hľadať..."
-                    enterkeyhint="search"
-                    oninput="handleSearch(this.value)"
-                >
-            </div>
+#adminTrigger:active .admin-hint,
+#adminTrigger.pressing .admin-hint {
+    opacity: 1;
+}
 
-            <div class="main-menu" id="mainMenu">
-                <button class="menu-btn active" onclick="showSection('diagnostic')" data-section="diagnostic">
-                    <span class="icon">🔧</span>
-                    <span data-translate="diagnosticMenu">Diagnostika</span>
-                </button>
+/* Animácie pre notifikácie */
+@keyframes slideDown {
+    from { transform: translate(-50%, -100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
 
-                <button class="menu-btn" onclick="showSection('errorcodes')" data-section="errorcodes">
-                    <span class="icon">⚠️</span>
-                    <span data-translate="errorsMenu">Chyby</span>
-                </button>
+@keyframes slideUp {
+    from { transform: translate(-50%, 0); opacity: 1; }
+    to { transform: translate(-50%, -100%); opacity: 0; }
+}
 
-                <button class="menu-btn" onclick="showSection('devices')" data-section="devices">
-                    <span class="icon">📟</span>
-                    <span data-translate="devicesMenu">Zariadenia</span>
-                </button>
+/* Admin režim */
+.admin-mode .admin-only {
+    display: flex !important;
+}
 
-                <button class="menu-btn" onclick="showSection('measurements')" data-section="measurements">
-                    <span class="icon">📊</span>
-                    <span data-translate="measurementsMenu">Merania</span>
-                </button>
+.hidden {
+    display: none !important;
+}
 
-                <button class="menu-btn" onclick="showSection('ebl')" data-section="ebl">
-                    <span class="icon">⚡</span>
-                    <span data-translate="eblMenu">EBL</span>
-                </button>
+/* Modal štýly */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
 
-                <button class="menu-btn" onclick="openManualsModal()">
-                    <span class="icon">📚</span>
-                    <span data-translate="manualsMenu">Manuály</span>
-                </button>
-            </div>
+.modal.active {
+    display: flex;
+}
 
-            <div class="content-area" id="contentArea">
-                <div id="categoriesView" class="categories-card">
-                    <div class="categories-header">
-                        <div class="categories-title">
-                            <span>☰</span>
-                            <span data-translate="categories">Kategórie</span>
-                        </div>
-                    </div>
-                    <div id="categoriesList"></div>
-                </div>
+.modal-content {
+    background: #2a2a2a;
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: white;
+}
 
-                <div id="electricView" class="categories-card hidden">
-                    <div class="categories-header">
-                        <div class="categories-title">
-                            <span>⚡</span>
-                            <span>Elektrina</span>
-                        </div>
-                    </div>
-                    <div class="subcategory-list" id="electricSubcategories"></div>
-                </div>
+.modal-content.wide {
+    max-width: 600px;
+}
 
-                <div id="diagnosesView" class="diagnoses-list hidden">
-                    <div class="breadcrumb">
-                        <a href="#" onclick="showCategories()">Diagnostika</a>
-                        <span>›</span>
-                        <span id="currentCategoryName"></span>
-                    </div>
-                    <div id="diagnosesList"></div>
-                </div>
+.modal-content h3 {
+    margin-bottom: 15px;
+    text-align: center;
+}
 
-                <div id="errorCodesView" class="diagnoses-list hidden">
-                    <div class="breadcrumb">
-                        <a href="#" onclick="showMainMenu()">Menu</a>
-                        <span>›</span>
-                        <span data-translate="errorsMenu">Chybové kódy</span>
-                    </div>
-                    <div id="errorCodesContent"></div>
-                </div>
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
 
-                <div id="wizardView" class="wizard hidden">
-                    <div class="breadcrumb wizard-breadcrumb">
-                        <a href="#" onclick="showCategories()">Diagnostika</a>
-                        <span>›</span>
-                        <a href="#" onclick="showDiagnoses(currentCategory)"><span id="wizardCategoryName"></span></a>
-                        <span>›</span>
-                        <span id="wizardDiagnosisName"></span>
-                    </div>
+.btn-primary, .btn-secondary, .btn-danger {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
 
-                    <div id="pathHistory" class="path-history hidden">
-                        <div class="path-title" data-translate="currentPath">DOTERAJŠIA CESTA</div>
-                        <div id="pathContent"></div>
-                    </div>
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
 
-                    <div id="wizardContent" class="wizard-content"></div>
-                </div>
+.btn-secondary {
+    background: #555;
+    color: white;
+}
 
-                <div id="editorView" class="editor hidden">
-                    <div class="editor-tabs">
-                        <button class="editor-tab active" onclick="switchEditorTab('trees')">Stromy</button>
-                        <button class="editor-tab" onclick="switchEditorTab('languages')">Jazyky</button>
-                        <button class="editor-tab" onclick="switchEditorTab('errorcodes')">Chyby</button>
-                    </div>
-                    <div class="editor-content-scroll" id="editorContent"></div>
-                </div>
-            </div>
-        </div>
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
 
-        <button class="feedback-btn" onclick="openFeedback()">
-            <span>✉️</span>
-            <span data-translate="feedback">Spätná väzba</span>
-        </button>
+/* Admin menu */
+.admin-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 15px 0;
+}
 
-        <div id="passwordModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">🔒 Admin</div>
-                    <button class="modal-close" onclick="closePasswordModal()">×</button>
-                </div>
-                <input type="password" id="adminPassword" class="password-input" placeholder="Heslo">
-                <button class="btn-primary" onclick="checkPassword()">Prihlásiť</button>
-            </div>
-        </div>
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: #3a3a3a;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    text-align: left;
+}
 
-        <div id="adminModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">⚙️ Admin</div>
-                    <button class="modal-close" onclick="closeAdminModal()">×</button>
-                </div>
-                <div class="menu-item" onclick="openImportModal()">
-                    <span>⬆️</span>
-                    <span>Import</span>
-                </div>
-                <div class="menu-item" onclick="openExportModal()">
-                    <span>⬇️</span>
-                    <span>Export</span>
-                </div>
-                <div class="menu-item danger" onclick="clearAllData()">
-                    <span>🗑️</span>
-                    <span>Vymazať</span>
-                </div>
-                <div class="menu-item" onclick="openEditor()">
-                    <span>✏️</span>
-                    <span>Editor</span>
-                </div>
-                <div class="menu-item" onclick="toggleEditMode()">
-                    <span>🖼️</span>
-                    <span>Fotky</span>
-                </div>
-                <div class="menu-item" onclick="logoutAdmin()">
-                    <span>🔒</span>
-                    <span>Odhlásiť</span>
-                </div>
-            </div>
-        </div>
+.menu-item.danger {
+    background: #c0392b;
+}
 
-        <div id="contactModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">📞 Kontakt</div>
-                    <button class="modal-close" onclick="closeContactModal()">×</button>
-                </div>
-                <div class="contact-modal-content">
-                    <div class="contact-photo-large" onclick="handleContactPhotoClick()">
-                        <span id="contactModalText">👤</span>
-                        <img id="contactModalImg" class="hidden" src="" alt="">
-                    </div>
+/* Formuláre */
+input[type="password"],
+input[type="text"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: #1a1a1a;
+    color: white;
+    font-size: 16px;
+}
 
-                    <div class="contact-name">Stanislav Drozd</div>
-                    <div class="contact-role">Caravan Techniker am Main</div>
-
-                    <div class="contact-warning" id="contactWarningBox">
-                        <div class="contact-warning-icon">🛑</div>
-                        <div class="contact-warning-text" id="contactWarningTitle">NEVOLAJTE MI</div>
-                        <div class="contact-warning-subtext" id="contactWarningSubtext">Som pracovne vyťažený a telefón nedvíham</div>
-                    </div>
-
-                    <div class="contact-actions">
-                        <button class="contact-action-btn whatsapp-action" onclick="openWhatsApp()">
-                            <span>💬</span> WhatsApp
-                        </button>
-                        <button class="contact-action-btn sms-action" onclick="openSMS()">
-                            <span>📱</span> SMS
-                        </button>
-                    </div>
-
-                    <div class="contact-notice" id="contactNotice">
-                        <strong>⚠️ Dôležité:</strong> Telefonické hovory neprijímam. Iba písomné, alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.
-                    </div>
-
-                    <button class="btn-secondary" onclick="closeContactModal()" id="closeContactBtn">Zavrieť</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="langModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">🌍 Jazyk / Manuály</div>
-                    <button class="modal-close" onclick="closeLangModal()">×</button>
-                </div>
-                <div id="langOptions"></div>
-            </div>
-        </div>
-
-        <div id="exportModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">⬇️ Export</div>
-                    <button class="modal-close" onclick="closeExportModal()">×</button>
-                </div>
-                <div class="export-options">
-                    <label class="radio-option">
-                        <input type="radio" name="exportType" value="single" checked>
-                        <span>Konkrétny strom</span>
-                    </label>
-                    <select id="exportTreeSelect"></select>
-                </div>
-                <button class="btn-primary" onclick="doExport()">
-                    <span>📋</span>
-                    <span>Zobraziť kód</span>
-                </button>
-                <button class="btn-secondary" onclick="closeExportModal()">Zrušiť</button>
-            </div>
-        </div>
-
-        <div id="exportCodeModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal" style="max-width: 500px;">
-                <div class="modal-header">
-                    <div class="modal-title">📋 Export</div>
-                    <button class="modal-close" onclick="closeExportCodeModal()">×</button>
-                </div>
-                <div class="code-display" id="exportCodeDisplay"></div>
-                <button class="btn-copy" onclick="copyExportCode()">
-                    <span>📋</span> Kopírovať
-                </button>
-                <button class="btn-primary" onclick="downloadExportCode()" style="margin-top: 10px;">
-                    <span>💾</span> Stiahnuť
-                </button>
-            </div>
-        </div>
-
-        <div id="importModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal" style="max-width: 500px;">
-                <div class="modal-header">
-                    <div class="modal-title">⬆️ Import</div>
-                    <button class="modal-close" onclick="closeImportModal()">×</button>
-                </div>
-                <div id="importStep1">
-                    <div style="font-weight: 600; margin-bottom: 12px; color: #374151; font-size: 0.95em;">Typ importu:</div>
-                    <div class="import-type-grid">
-                        <div class="import-type-btn" onclick="selectImportType('tree')">
-                            <div class="import-type-icon">🌳</div>
-                            <div class="import-type-label">Strom</div>
-                        </div>
-                        <div class="import-type-btn" onclick="selectImportType('errorcodes')">
-                            <div class="import-type-icon">🔧</div>
-                            <div class="import-type-label">Chyby</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="importTreeStep" class="hidden">
-                    <div class="import-action-box">
-                        <div class="import-action-title">Akcia:</div>
-                        <label class="radio-option" style="margin-bottom: 8px; padding: 10px;">
-                            <input type="radio" name="treeImportAction" value="new" checked>
-                            <span>Nový strom</span>
-                        </label>
-                        <label class="radio-option" style="padding: 10px;">
-                            <input type="radio" name="treeImportAction" value="replace">
-                            <span>Nahradiť</span>
-                        </label>
-                        <select id="replaceTreeSelect" style="display: none;"></select>
-                    </div>
-                    <div class="input-group">
-                        <label>JSON kód:</label>
-                        <textarea id="importTreeCode" placeholder="Vložte JSON..." style="min-height: 120px;"></textarea>
-                    </div>
-                    <button class="btn-primary" onclick="doImportTree()">
-                        <span>⬆️</span> Importovať
-                    </button>
-                    <div style="text-align: center; margin: 12px 0; color: #6b7280; font-size: 0.9em;">- alebo -</div>
-                    <input type="file" id="importTreeFile" accept=".json" style="display: none;" onchange="handleTreeFileImport(event)">
-                    <button class="btn-secondary" onclick="document.getElementById('importTreeFile').click()">
-                        <span>📂</span> Súbor
-                    </button>
-                    <button class="btn-secondary" onclick="backToImportStep1()" style="margin-top: 10px;">Späť</button>
-                </div>
-
-                <div id="importErrorStep" class="hidden">
-                    <div style="font-weight: 600; margin-bottom: 12px; color: #374151; font-size: 0.95em;">Značka:</div>
-                    <div class="brand-grid" id="brandGrid"></div>
-                    <div class="input-group">
-                        <label>Model:</label>
-                        <input type="text" id="importDeviceModel" placeholder="napr. Combi 4...">
-                    </div>
-                    <div class="input-group">
-                        <label>JSON kód:</label>
-                        <textarea id="importErrorCode" placeholder="Vložte JSON..." style="min-height: 120px;"></textarea>
-                    </div>
-                    <button class="btn-primary" onclick="doImportErrorCodes()">
-                        <span>⬆️</span> Importovať
-                    </button>
-                    <div style="text-align: center; margin: 12px 0; color: #6b7280; font-size: 0.9em;">- alebo -</div>
-                    <input type="file" id="importErrorFile" accept=".json" style="display: none;" onchange="handleErrorFileImport(event)">
-                    <button class="btn-secondary" onclick="document.getElementById('importErrorFile').click()">
-                        <span>📂</span> Súbor
-                    </button>
-                    <button class="btn-secondary" onclick="backToImportStep1()" style="margin-top: 10px;">Späť</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="editTreeModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal" style="max-width: 600px;">
-                <div class="modal-header">
-                    <div class="modal-title">✏️ Editovať</div>
-                    <button class="modal-close" onclick="closeEditTreeModal()">×</button>
-                </div>
-                <div class="input-group">
-                    <label>JSON:</label>
-                    <textarea id="treeEditCode" style="min-height: 300px;"></textarea>
-                </div>
-                <button class="btn-save" onclick="saveTreeEdit()">
-                    <span>💾</span> Uložiť
-                </button>
-            </div>
-        </div>
-
-        <div id="exportPathModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">📋 Cesta</div>
-                    <button class="modal-close" onclick="closeExportPathModal()">×</button>
-                </div>
-                <div class="code-display" id="pathTextDisplay" style="background: white; color: #1f2937; border: 2px solid #e5e7eb;"></div>
-                <button class="btn-copy" onclick="copyPathText()">
-                    <span>📋</span> Kopírovať
-                </button>
-            </div>
-        </div>
-
-        <div id="photoModal" class="modal-overlay" onclick="closeModal(event)">
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">🖼️ Fotka</div>
-                    <button class="modal-close" onclick="closePhotoModal()">×</button>
-                </div>
-                <input type="file" id="photoUpload" accept="image/*" class="photo-upload" onchange="handlePhotoUpload(event)">
-                <div class="menu-item" onclick="document.getElementById('photoUpload').click()">
-                    <span>📂</span>
-                    <span>Vybrať</span>
-                </div>
-                <div class="menu-item danger" onclick="removePhoto()">
-                    <span>🗑️</span>
-                    <span>Odstrániť</span>
-                </div>
-            </div>
-        </div>
-
-        <input type="hidden" id="currentPhotoTarget">
-        <input type="hidden" id="selectedImportType">
-        <input type="hidden" id="selectedBrand">
-
-        <div class="status-bar">
-            <span id="adminStatus"></span>
-            <span style="margin-left: 15px;">v5.4</span>
-        </div>
-    </div>
-
-    <script src="config.js"></script>
-    <script src="translations.js"></script>
-    <script src="data.js"></script>
-    <script src="utils.js"></script>
-    <script src="ui.js"></script>
-    <script src="wizard.js"></script>
-    <script src="import-export.js"></script>
-    <script src="editor.js"></script>
-    <script src="app.js"></script>
-</body>
-</html>
+textarea {
+    min-height: 150px;
+    resize: vertical;
+}
