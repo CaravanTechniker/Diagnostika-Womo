@@ -15,7 +15,7 @@ const UI_TRANSLATIONS = {
     sk: {
         appTitle: 'Diagnostika Autokaravanu',
         diagnostic: 'Diagnostika',
-        errorCodes: 'Chybové kódy',
+        errorCodes: 'Chyby',
         devices: 'Zariadenia',
         measurements: 'Merania',
         manuals: 'Manuály',
@@ -76,37 +76,37 @@ const UI_TRANSLATIONS = {
 
 const CONTACT_TRANSLATIONS = {
     de: {
-        warningTitle: 'RUFEN SIE MICH NICHT AN',
+        warningTitle: 'Bitte rufen Sie mich NICHT an',
         warningSubtext: 'Ich bin beruflich beschäftigt und nehme keine Anrufe entgegen',
         notice: 'Telefonische Anrufe werden nicht entgegengenommen. Nur schriftliche oder Sprachnachrichten via WhatsApp oder SMS. Danke für Ihr Verständnis.',
         closeBtn: 'Schließen'
     },
     sk: {
-        warningTitle: 'NEVOLAJTE MI',
+        warningTitle: 'Prosím NEVOLAJTE MI',
         warningSubtext: 'Som pracovne vyťažený a telefón nedvíham',
         notice: 'Telefonické hovory neprijímam. Iba písomné, alebo hlasové správy cez WhatsApp alebo SMS. Ďakujem za pochopenie.',
         closeBtn: 'Zavrieť'
     },
     en: {
-        warningTitle: 'DO NOT CALL ME',
+        warningTitle: 'Please DO NOT call me',
         warningSubtext: 'I am busy with work and do not answer calls',
         notice: 'Phone calls are not accepted. Only written or voice messages via WhatsApp or SMS. Thank you for your understanding.',
         closeBtn: 'Close'
     },
     it: {
-        warningTitle: 'NON CHIAMARMI',
+        warningTitle: 'Per favore NON chiamarmi',
         warningSubtext: 'Sono occupato con il lavoro e non rispondo alle chiamate',
         notice: 'Le chiamate telefoniche non sono accettate. Solo messaggi scritti o vocali via WhatsApp o SMS. Grazie per la comprensione.',
         closeBtn: 'Chiudi'
     },
     fr: {
-        warningTitle: 'NE M\'APPELEZ PAS',
+        warningTitle: 'S\'il vous plaît, ne m\'appelez PAS',
         warningSubtext: 'Je suis occupé par le travail et ne réponds pas aux appels',
         notice: 'Les appels téléphoniques ne sont pas acceptés. Uniquement des messages écrits ou vocaux via WhatsApp ou SMS. Merci de votre compréhension.',
         closeBtn: 'Fermer'
     },
     es: {
-        warningTitle: 'NO ME LLAMES',
+        warningTitle: 'Por favor NO me llames',
         warningSubtext: 'Estoy ocupado con el trabajo y no contesto llamadas',
         notice: 'No se aceptan llamadas telefónicas. Solo mensajes escritos o de voz a través de WhatsApp o SMS. Gracias por su comprensión.',
         closeBtn: 'Cerrar'
