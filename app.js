@@ -9,74 +9,34 @@ const MANUALS_DATA = {
     cbe: { name: 'CBE', items: [] }
 };
 
-let adminPressTimer = null;
-let adminLongPressTriggered = false;
-
-// Admin funkcie - SKRYTÉ V SEARCH POLI (3 sekundy)
-function setupHiddenAdminTrigger() {
-    const trigger = document.getElementById('adminTrigger');
-    if (!trigger) return;
-
-    const startPress = () => {
-        if (isEditMode || isAdminLoggedIn) return;
-        adminLongPressTriggered = false;
-
-        if (adminPressTimer) clearTimeout(adminPressTimer);
-        adminPressTimer = setTimeout(() => {
-            adminLongPressTriggered = true;
-            openPasswordModal();
-        }, 3000); // 3 SEKUNDY podržanie
-    };
-
-    const endPress = () => {
-        if (adminPressTimer) {
-            clearTimeout(adminPressTimer);
-            adminPressTimer = null;
-        }
-    };
-
-    // Podpora pre touch aj mouse
-    trigger.addEventListener('touchstart', startPress, { passive: true });
-    trigger.addEventListener('touchend', endPress);
-    trigger.addEventListener('touchcancel', endPress);
-    trigger.addEventListener('mousedown', startPress);
-    trigger.addEventListener('mouseup', endPress);
-    trigger.addEventListener('mouseleave', endPress);
-}
-
+// VIDITEĽNÉ ADMIN TLAČIDLO - kliknutie otvorí prihlásenie alebo panel
 function toggleAdmin() {
     if (isAdminLoggedIn) {
-        openAdminModal();
+        // Ak je prihlásený, prepne panel
+        const panel = document.getElementById('adminPanel');
+        panel.classList.toggle('hidden');
+        updateAdminButton();
     } else {
+        // Ak nie je prihlásený, otvorí prihlásenie
         openPasswordModal();
     }
 }
 
-function logoutAdmin() {
-    isAdminLoggedIn = false;
-    sessionStorage.removeItem('adminSession');
-    document.getElementById('appContainer').classList.remove('admin-mode');
-    updateAdminStatus();
-    closeAdminModal();
-}
-
-function toggleEditMode() {
-    isEditMode = !isEditMode;
-    const container = document.getElementById('appContainer');
-    if (isEditMode) {
-        container.classList.add('admin-mode');
-        showNotification('Režim úprav zapnutý');
+function updateAdminButton() {
+    const btn = document.getElementById('adminBtn');
+    const panel = document.getElementById('adminPanel');
+    
+    if (isAdminLoggedIn && !panel.classList.contains('hidden')) {
+        btn.classList.add('active');
     } else {
-        container.classList.remove('admin-mode');
+        btn.classList.remove('active');
     }
-    closeAdminModal();
 }
 
-// Password funkcie
 function openPasswordModal() {
     document.getElementById('passwordModal').classList.add('active');
     document.getElementById('adminPassword').value = '';
-    document.getElementById('adminPassword').focus();
+    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
 }
 
 function closePasswordModal() {
@@ -89,9 +49,13 @@ function checkPassword() {
         isAdminLoggedIn = true;
         sessionStorage.setItem('adminSession', 'true');
         document.getElementById('appContainer').classList.add('admin-mode');
-        updateAdminStatus();
+        
         closePasswordModal();
-        openAdminModal();
+        
+        // OTVORÍ ADMIN PANEL TRVALO
+        document.getElementById('adminPanel').classList.remove('hidden');
+        updateAdminButton();
+        
         showNotification('Prihlásený ako admin');
     } else {
         showNotification('Nesprávne heslo!', 'error');
@@ -99,12 +63,26 @@ function checkPassword() {
     }
 }
 
-function openAdminModal() {
-    document.getElementById('adminModal').classList.add('active');
+// Odhlásenie - zavrie panel
+function logoutAdmin() {
+    isAdminLoggedIn = false;
+    sessionStorage.removeItem('adminSession');
+    document.getElementById('appContainer').classList.remove('admin-mode');
+    document.getElementById('adminPanel').classList.add('hidden');
+    updateAdminButton();
+    showNotification('Odhlásený');
 }
 
-function closeAdminModal() {
-    document.getElementById('adminModal').classList.remove('active');
+function toggleEditMode() {
+    isEditMode = !isEditMode;
+    const container = document.getElementById('appContainer');
+    if (isEditMode) {
+        container.classList.add('admin-mode');
+        showNotification('Edit mód zapnutý');
+    } else {
+        container.classList.remove('admin-mode');
+        showNotification('Edit mód vypnutý');
+    }
 }
 
 // Notifikácia
@@ -123,6 +101,9 @@ function showNotification(message, type = 'success') {
         z-index: 9999;
         box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         animation: slideDown 0.3s ease;
+        font-size: 15px;
+        max-width: 90%;
+        text-align: center;
     `;
     notif.textContent = message;
     document.body.appendChild(notif);
@@ -158,7 +139,7 @@ function openFeedback() {
     window.location.href = 'mailto:' + CONFIG.CONTACT.email + '?subject=Spatna vazba';
 }
 
-// Jazykové funkcie - OPRAVENÉ
+// Jazykové funkcie
 function openLangModal() {
     const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
@@ -192,12 +173,8 @@ function setLanguage(code) {
     // Aktualizácia textov
     updateLanguage();
     
-    // Re-render kategórií
-    if (typeof renderCategories === 'function') {
-        renderCategories();
-    }
-    
-    // Re-render aktuálnej sekcie
+    // Re-render
+    if (typeof renderCategories === 'function') renderCategories();
     if (currentCategory && typeof showDiagnoses === 'function') {
         showDiagnoses(currentCategory);
     } else if (typeof showCategories === 'function') {
@@ -206,7 +183,7 @@ function setLanguage(code) {
     
     saveDataToStorage();
     closeLangModal();
-    showNotification(`Jazyk zmenený na ${appData.languages[code].name}`);
+    showNotification(`Jazyk: ${appData.languages[code].name}`);
 }
 
 // Manuály
@@ -260,13 +237,6 @@ function openManualSection(sectionKey) {
 }
 
 // Foto funkcie
-function handleHeaderIconClick() {
-    if (adminLongPressTriggered) {
-        adminLongPressTriggered = false;
-        return;
-    }
-}
-
 function handleContactPhotoClick() {
     if (isEditMode || isAdminLoggedIn) {
         document.getElementById('currentPhotoTarget').value = 'contact';
@@ -339,5 +309,13 @@ function removePhoto() {
 // Inicializácia
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    setupHiddenAdminTrigger();
+    
+    // Skontrolovať či je admin stále prihlásený
+    const adminSession = sessionStorage.getItem('adminSession');
+    if (adminSession === 'true') {
+        isAdminLoggedIn = true;
+        document.getElementById('appContainer').classList.add('admin-mode');
+        // Panel zostane zatvorený po načítaní, používateľ si ho otvorí kliknutím
+        updateAdminButton();
+    }
 });
