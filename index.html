@@ -47,32 +47,32 @@
             <div class="main-menu" id="mainMenu">
                 <button class="menu-btn active" onclick="showSection('diagnostic')" data-section="diagnostic">
                     <span class="icon">🔧</span>
-                    <span>Diagnostika</span>
+                    <span data-translate="diagnosticMenu">Diagnostika</span>
                 </button>
 
                 <button class="menu-btn" onclick="showSection('errorcodes')" data-section="errorcodes">
                     <span class="icon">⚠️</span>
-                    <span>Chyby</span>
+                    <span data-translate="errorsMenu">Chyby</span>
                 </button>
 
                 <button class="menu-btn" onclick="showSection('devices')" data-section="devices">
                     <span class="icon">📟</span>
-                    <span>Zariadenia</span>
+                    <span data-translate="devicesMenu">Zariadenia</span>
                 </button>
 
                 <button class="menu-btn" onclick="showSection('measurements')" data-section="measurements">
                     <span class="icon">📊</span>
-                    <span>Merania</span>
+                    <span data-translate="measurementsMenu">Merania</span>
                 </button>
 
                 <button class="menu-btn" onclick="showSection('ebl')" data-section="ebl">
                     <span class="icon">⚡</span>
-                    <span>EBL</span>
+                    <span data-translate="eblMenu">EBL</span>
                 </button>
 
                 <button class="menu-btn" onclick="openManualsModal()">
                     <span class="icon">📚</span>
-                    <span>Manuály</span>
+                    <span data-translate="manualsMenu">Manuály</span>
                 </button>
             </div>
 
@@ -110,7 +110,7 @@
                     <div class="breadcrumb">
                         <a href="#" onclick="showMainMenu()">Menu</a>
                         <span>›</span>
-                        <span>Chybové kódy</span>
+                        <span data-translate="errorsMenu">Chybové kódy</span>
                     </div>
                     <div id="errorCodesContent"></div>
                 </div>
@@ -403,7 +403,7 @@
 
         <div class="status-bar">
             <span id="adminStatus"></span>
-            <span style="margin-left: 15px;">v5.3</span>
+            <span style="margin-left: 15px;">v5.4</span>
         </div>
     </div>
 
