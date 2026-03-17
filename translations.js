@@ -10,7 +10,13 @@ const UI_TRANSLATIONS = {
         categories: 'Kategorien',
         search: 'Suchen...',
         contact: 'Kontakt',
-        closeBtn: 'Schließen'
+        closeBtn: 'Schließen',
+        yes: 'Ja',
+        no: 'Nein',
+        back: 'Zurück',
+        currentPath: 'WEG',
+        exportPath: 'Weg exportieren',
+        restart: 'Neustart'
     },
     sk: {
         appTitle: 'Diagnostika Autokaravanu',
@@ -22,7 +28,13 @@ const UI_TRANSLATIONS = {
         categories: 'Kategórie',
         search: 'Hľadať...',
         contact: 'Kontakt',
-        closeBtn: 'Zavrieť'
+        closeBtn: 'Zavrieť',
+        yes: 'Áno',
+        no: 'Nie',
+        back: 'Späť',
+        currentPath: 'CESTA',
+        exportPath: 'Exportovať cestu',
+        restart: 'Reštart'
     },
     en: {
         appTitle: 'Motorhome Diagnosis',
@@ -34,7 +46,13 @@ const UI_TRANSLATIONS = {
         categories: 'Categories',
         search: 'Search...',
         contact: 'Contact',
-        closeBtn: 'Close'
+        closeBtn: 'Close',
+        yes: 'Yes',
+        no: 'No',
+        back: 'Back',
+        currentPath: 'PATH',
+        exportPath: 'Export path',
+        restart: 'Restart'
     },
     it: {
         appTitle: 'Diagnosi Camper',
@@ -46,7 +64,13 @@ const UI_TRANSLATIONS = {
         categories: 'Categorie',
         search: 'Cerca...',
         contact: 'Contatto',
-        closeBtn: 'Chiudi'
+        closeBtn: 'Chiudi',
+        yes: 'Sì',
+        no: 'No',
+        back: 'Indietro',
+        currentPath: 'PERCORSO',
+        exportPath: 'Esporta percorso',
+        restart: 'Riavvia'
     },
     fr: {
         appTitle: 'Diagnostic Camping-car',
@@ -55,22 +79,34 @@ const UI_TRANSLATIONS = {
         devices: 'Appareils',
         measurements: 'Mesures',
         manuals: 'Manuels',
-        categories: 'Categories',
+        categories: 'Catégories',
         search: 'Rechercher...',
         contact: 'Contact',
-        closeBtn: 'Fermer'
+        closeBtn: 'Fermer',
+        yes: 'Oui',
+        no: 'Non',
+        back: 'Retour',
+        currentPath: 'CHEMIN',
+        exportPath: 'Exporter chemin',
+        restart: 'Redémarrer'
     },
     es: {
-        appTitle: 'Diagnostico Autocaravana',
-        diagnostic: 'Diagnostico',
-        errorCodes: 'Codigos Error',
+        appTitle: 'Diagnóstico Autocaravana',
+        diagnostic: 'Diagnóstico',
+        errorCodes: 'Códigos Error',
         devices: 'Dispositivos',
         measurements: 'Mediciones',
         manuals: 'Manuales',
-        categories: 'Categorias',
+        categories: 'Categorías',
         search: 'Buscar...',
         contact: 'Contacto',
-        closeBtn: 'Cerrar'
+        closeBtn: 'Cerrar',
+        yes: 'Sí',
+        no: 'No',
+        back: 'Atrás',
+        currentPath: 'RUTA',
+        exportPath: 'Exportar ruta',
+        restart: 'Reiniciar'
     }
 };
 
