@@ -1,9 +1,39 @@
 // Hlavný aplikačný súbor
 
-// ===== FOTKY - GLOBÁLNE PREMENNÉ =====
+// ===== GLOBÁLNE PREMENNÉ =====
 let currentPhotoData = null;
 let currentPhotoTargetType = null;
 let currentPhotoTargetId = null;
+let isAdminLoggedIn = false;
+let isEditMode = false;
+let currentCategory = null;
+
+// ===== JAZYKOVÉ FUNKCIE =====
+function updateLanguage() {
+    const lang = appData.currentLang || 'sk';
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS['sk'];
+    
+    // Aktualizovať všetky elementy s data-translate
+    document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        if (t[key]) {
+            el.textContent = t[key];
+        }
+    });
+    
+    // Aktualizovať placeholder-y
+    document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-translate-placeholder');
+        if (t[key]) {
+            el.placeholder = t[key];
+        }
+    });
+    
+    // Aktualizovať názov stránky
+    if (t.appTitle) {
+        document.title = t.appTitle;
+    }
+}
 
 // ===== ADMIN FUNKCIE =====
 function toggleAdmin() {
@@ -686,6 +716,21 @@ function showNotification(message, type = 'success') {
 
 // ===== INICIALIZÁCIA =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Načítať uložený jazyk
+    const savedLang = localStorage.getItem('currentLanguage');
+    if (savedLang && appData.languages[savedLang]) {
+        appData.currentLang = savedLang;
+    }
+    
+    // Aktualizovať jazykové tlačidlo
+    const flagImg = document.getElementById('currentFlag');
+    const langSpan = document.getElementById('currentLang');
+    if (flagImg) flagImg.src = CONFIG.FLAG_URLS[appData.currentLang];
+    if (langSpan) langSpan.textContent = appData.languages[appData.currentLang].code;
+    
+    // Aktualizovať všetky texty
+    updateLanguage();
+    
     init();
     updateLogoDisplay();
 
