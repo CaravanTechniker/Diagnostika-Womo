@@ -159,7 +159,21 @@ const TREE_TO_SUBCATEGORY = {
     'ebl_vnutorna_cesta_spalena': 'ebl'
 };
 
-// Default dáta aplikácie - VŠETKY KATEGÓRIE PODĽA OBRÁZKA
+// Manuály dáta - PRIDANÉ
+const MANUALS_DATA = {
+    truma: { name: 'Truma', items: [] },
+    thetford: { name: 'Thetford', items: [] },
+    dometic: { name: 'Dometic', items: [] },
+    webasto: { name: 'Webasto', items: [] },
+    alde: { name: 'Alde', items: [] },
+    victron: { name: 'Victron', items: [] },
+    schaudt: { name: 'Schaudt', items: [] },
+    nordelettronica: { name: 'Nordelettronica', items: [] },
+    cbe: { name: 'CBE', items: [] },
+    other: { name: 'Iné', items: [] }
+};
+
+// Default dáta aplikácie
 const DEFAULT_APP_DATA = {
     languages: {
         de: { name: 'Deutsch', code: 'DE' },
