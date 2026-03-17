@@ -21,6 +21,8 @@ function switchEditorTab(tab) {
         renderEditorLanguages();
     } else if (tab === 'errorcodes') {
         renderEditorErrorCodes();
+    } else if (tab === 'categories') {
+        renderEditorCategories();
     }
 }
 
@@ -103,6 +105,28 @@ function renderEditorErrorCodes() {
     content.innerHTML += `<button class="btn-save" onclick="showCategories()">Späť</button>`;
 }
 
+function renderEditorCategories() {
+    const content = document.getElementById('editorContent');
+    content.innerHTML = '<h2 style="margin-bottom: 15px; font-size: 1.2em;">Kategórie</h2>';
+    
+    appData.categories.forEach(cat => {
+        const div = document.createElement('div');
+        div.className = 'node-editor';
+        div.style.padding = '12px';
+        div.innerHTML = `
+            <div style="font-weight: bold; color: #3b82f6; margin-bottom: 8px; font-size: 0.95em;">
+                ${cat.icon} ${(cat.translations.sk || cat.translations.de).name}
+            </div>
+            <div style="font-size: 0.85em; color: #6b7280;">
+                ID: ${cat.id} | Stromy: ${cat.diagnoses ? cat.diagnoses.length : 0}
+            </div>
+        `;
+        content.appendChild(div);
+    });
+
+    content.innerHTML += `<button class="btn-save" onclick="showCategories()">Späť</button>`;
+}
+
 function deleteErrorCode(code) {
     if (!confirm('Zmazať kód ' + code + '?')) return;
     delete appData.errorCodes[code];
@@ -113,12 +137,22 @@ function deleteErrorCode(code) {
 function editTree(diagId) {
     currentEditingTree = diagId;
     const tree = findTree(diagId);
-    document.getElementById('treeEditCode').value = JSON.stringify(tree, null, 2);
-    document.getElementById('editTreeModal').classList.add('active');
-}
-
-function closeEditTreeModal() {
-    document.getElementById('editTreeModal').classList.remove('active');
+    
+    // Vytvoríme jednoduchý editor namiesto modálneho okna
+    const content = document.getElementById('editorContent');
+    content.innerHTML = `
+        <h2 style="margin-bottom: 15px; font-size: 1.2em;">Editovať strom</h2>
+        <div class="input-group">
+            <label>JSON:</label>
+            <textarea id="treeEditCode" style="min-height: 300px; font-family: monospace; font-size: 12px;">${JSON.stringify(tree, null, 2)}</textarea>
+        </div>
+        <button class="btn-save" onclick="saveTreeEdit()">
+            <span>💾</span> Uložiť
+        </button>
+        <button class="btn-secondary" onclick="renderEditorTrees()" style="margin-top: 10px;">
+            Zrušiť
+        </button>
+    `;
 }
 
 function saveTreeEdit() {
@@ -133,8 +167,7 @@ function saveTreeEdit() {
             }
         }
         saveDataToStorage();
-        alert('Uložené!');
-        closeEditTreeModal();
+        showNotification('Uložené!');
         renderEditorTrees();
     } catch (err) {
         alert('Chyba v JSON: ' + err.message);
