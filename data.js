@@ -1,13 +1,18 @@
-// Globálne premenné
+// Globálne premenné - ODSTRÁNENÉ DUPLICITNÉ DEKLARÁCIE
+// Tieto sú definované v app.js:
+// let currentPhotoData = null;
+// let currentPhotoTargetType = null;
+// let currentPhotoTargetId = null;
+// let isAdminLoggedIn = false;
+// let isEditMode = false;
+// let currentCategory = null;
+
 let appData = loadDataFromStorage();
-let currentCategory = null;
 let currentDiagnosis = null;
 let currentStep = 0;
 let pathHistory = [];
 let currentEditingTree = null;
 let currentSection = 'diagnostic';
-let isAdminLoggedIn = false;
-let isEditMode = false;
 
 // Načítanie dát z localStorage
 function loadDataFromStorage() {
