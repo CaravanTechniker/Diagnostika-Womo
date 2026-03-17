@@ -18,7 +18,7 @@
             <!-- Header -->
             <div class="header">
                 <div class="header-brand">
-                    <div class="logo-icon" id="logoIcon" onclick="editLogoPhoto()">🔧</div>
+                    <div class="logo-icon" id="logoIcon" onclick="openPhotoEditor('logo')">🔧</div>
                     <div class="header-text">
                         <div class="header-title" data-translate="appTitle">Diagnostika Autokaravanu</div>
                         <button class="contact-btn-main" onclick="openContactModal()">
@@ -41,7 +41,7 @@
                 </div>
             </div>
 
-            <!-- Admin Panel - TRVALO OTVORENÝ -->
+            <!-- Admin Panel -->
             <div id="adminPanel" class="admin-panel hidden">
                 <div class="admin-header">
                     <span>⚙️ Admin Panel</span>
@@ -64,11 +64,11 @@
                         <span>✏️</span>
                         <span>Editor</span>
                     </button>
-                    <button class="admin-action" onclick="openPhotoManager()">
+                    <button class="admin-action" onclick="toggleEditMode()">
                         <span>🖼️</span>
                         <span>Fotky</span>
                     </button>
-                    <button class="admin-action danger" onclick="toggleEditMode()">
+                    <button class="admin-action danger" onclick="openPhotoManager()">
                         <span>📝</span>
                         <span>Edit mód</span>
                     </button>
@@ -78,7 +78,7 @@
             <!-- Search Bar -->
             <div class="search-bar">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" data-translate-placeholder="search" placeholder="Hľadať...">
+                <input type="text" id="searchInput" data-translate-placeholder="search" placeholder="Hľadať..." oninput="handleSearchInput(this.value)">
             </div>
 
             <!-- Main Menu -->
@@ -163,6 +163,10 @@
                         <span>›</span>
                         <span id="wizardDiagnosisName">Postup</span>
                     </div>
+                    <div id="pathHistory" class="path-history hidden">
+                        <div class="path-title" data-translate="currentPath">DOTERAJŠIA CESTA</div>
+                        <div id="pathContent"></div>
+                    </div>
                     <div id="wizardContent" class="wizard-content"></div>
                 </div>
 
@@ -179,6 +183,7 @@
 
             <!-- Status Bar -->
             <div class="status-bar">
+                <span id="adminStatus"></span>
                 <span>v5.5</span>
             </div>
         </div>
@@ -206,7 +211,7 @@
             </div>
 
             <div class="contact-modal-content">
-                <div class="contact-photo-large" id="contactModalPhoto" onclick="editContactPhoto()">
+                <div class="contact-photo-large" id="contactModalPhoto" onclick="openPhotoEditor('contact')">
                     <img id="contactModalImg" class="hidden">
                     <span id="contactModalText">👤</span>
                     <div class="photo-edit-overlay" id="contactEditOverlay">
@@ -243,7 +248,7 @@
         </div>
     </div>
 
-    <!-- Photo Editor Modal - NOVÝ -->
+    <!-- Photo Editor Modal -->
     <div id="photoEditorModal" class="modal-overlay">
         <div class="modal">
             <div class="modal-header">
@@ -259,8 +264,6 @@
             </div>
 
             <input type="file" id="photoUpload" class="photo-upload" accept="image/*" onchange="handlePhotoSelect(event)">
-            <input type="hidden" id="currentPhotoTarget">
-            <input type="hidden" id="currentPhotoType">
 
             <div class="photo-actions">
                 <button class="btn-primary" onclick="document.getElementById('photoUpload').click()">
@@ -403,6 +406,18 @@
             <button class="btn-secondary" onclick="downloadExport()">💾 Stiahnuť súbor</button>
 
             <div class="code-display" id="exportResult"></div>
+        </div>
+    </div>
+
+    <!-- Export Path Modal - PRIDANÉ -->
+    <div id="exportPathModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">📋 Cesta diagnostiky</span>
+                <button class="modal-close" onclick="closeExportPathModal()">×</button>
+            </div>
+            <div class="code-display" id="pathTextDisplay" style="background:white;color:var(--text);border:2px solid #e2e8f0;"></div>
+            <button class="btn-primary" onclick="copyPathText()">📋 Kopírovať</button>
         </div>
     </div>
 
