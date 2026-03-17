@@ -12,8 +12,16 @@ function startWizard(diagnosisId) {
     document.getElementById('wizardView').classList.remove('hidden');
     document.body.classList.add('wizard-active');
 
-    document.getElementById('wizardCategoryName').textContent = cat.translations[lang]?.name || cat.translations['de'].name;
-    document.getElementById('wizardDiagnosisName').textContent = dt.title;
+    // OPRAVA: Používame správne ID z HTML
+    const wizardCategoryLink = document.getElementById('wizardCategoryLink');
+    if (wizardCategoryLink) {
+        wizardCategoryLink.textContent = cat.translations[lang]?.name || cat.translations['de'].name;
+    }
+    
+    const wizardDiagnosisName = document.getElementById('wizardDiagnosisName');
+    if (wizardDiagnosisName) {
+        wizardDiagnosisName.textContent = dt.title;
+    }
 
     currentStep = 0;
     pathHistory = [];
@@ -25,13 +33,28 @@ function renderWizard() {
     const diag = cat.diagnoses.find(d => d.id === currentDiagnosis);
     const lang = appData.currentLang;
     const data = diag.translations[lang] || diag.translations['de'];
-    const t = UI_TRANSLATIONS[lang];
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.de;
 
     const content = document.getElementById('wizardContent');
 
+    // Aktualizácia path history
     const pathHistoryBox = document.getElementById('pathHistory');
-    if (pathHistoryBox) {
-        pathHistoryBox.classList.add('hidden');
+    const pathContent = document.getElementById('pathContent');
+    
+    if (pathHistoryBox && pathContent) {
+        if (pathHistory.length > 0) {
+            pathHistoryBox.classList.remove('hidden');
+            pathContent.innerHTML = pathHistory.map((p, i) => `
+                <div style="margin-bottom: 3px; font-size: 0.85em;">
+                    ${i + 1}. ${p.question} 
+                    <span style="color: ${p.answer === 'yes' ? '#22c55e' : '#ef4444'}; font-weight: bold;">
+                        ${p.answer === 'yes' ? t.yes : t.no}
+                    </span>
+                </div>
+            `).join('');
+        } else {
+            pathHistoryBox.classList.add('hidden');
+        }
     }
 
     if (typeof currentStep === 'string' && currentStep.startsWith('result')) {
@@ -43,7 +66,7 @@ function renderWizard() {
                         ← ${t.back}
                     </button>
                     <button class="btn-restart" onclick="restartWizard()">
-                        🔄 Restart
+                        🔄 ${t.restart}
                     </button>
                     <button class="btn-export-path" onclick="exportPath()">
                         📋 ${t.exportPath}
@@ -70,7 +93,7 @@ function renderWizard() {
                 ${step.q}
             </div>
 
-            <div class="buttons wizard-actions-top">
+            <div class="buttons">
                 <button class="btn-yes" onclick="answer(true)">
                     ✓ ${t.yes}
                 </button>
@@ -79,7 +102,7 @@ function renderWizard() {
                 </button>
                 ${currentStep > 0
                     ? `<button class="btn-back" onclick="goBack()">← ${t.back}</button>`
-                    : `<button class="btn-back" onclick="showDiagnoses('${currentCategory}')">← ${t.back}</button>`}
+                    : `<button class="btn-back" onclick="closeWizard()">← ${t.back}</button>`}
             </div>
         </div>
     `;
@@ -105,7 +128,7 @@ function goBackFromResult() {
 
         renderWizard();
     } else {
-        showDiagnoses(currentCategory);
+        closeWizard();
     }
 }
 
@@ -154,11 +177,11 @@ function goBack() {
 
 function exportPath() {
     const lang = appData.currentLang;
-    const t = UI_TRANSLATIONS[lang];
+    const t = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS.de;
 
     let text = t.currentPath + '\n\n';
     text += 'Diagnosa: ' + document.getElementById('wizardDiagnosisName').textContent + '\n';
-    text += 'Kategoria: ' + document.getElementById('wizardCategoryName').textContent + '\n\n';
+    text += 'Kategoria: ' + document.getElementById('wizardCategoryLink').textContent + '\n\n';
 
     pathHistory.forEach((p, i) => {
         const answer = p.answer === 'yes' ? t.yes : t.no;
@@ -170,17 +193,32 @@ function exportPath() {
         text += 'VYSLEDOK:\n' + resultDiv.textContent.trim();
     }
 
-    document.getElementById('pathTextDisplay').textContent = text;
-    document.getElementById('exportPathModal').classList.add('active');
+    const pathTextDisplay = document.getElementById('pathTextDisplay');
+    if (pathTextDisplay) {
+        pathTextDisplay.textContent = text;
+    }
+    
+    const exportPathModal = document.getElementById('exportPathModal');
+    if (exportPathModal) {
+        exportPathModal.classList.add('active');
+    }
 }
 
 function closeExportPathModal() {
-    document.getElementById('exportPathModal').classList.remove('active');
+    const exportPathModal = document.getElementById('exportPathModal');
+    if (exportPathModal) {
+        exportPathModal.classList.remove('active');
+    }
 }
 
 function copyPathText() {
-    const text = document.getElementById('pathTextDisplay').textContent;
+    const pathTextDisplay = document.getElementById('pathTextDisplay');
+    if (!pathTextDisplay) return;
+    
+    const text = pathTextDisplay.textContent;
     navigator.clipboard.writeText(text).then(() => {
-        alert('Skopirovane!');
+        showNotification('Skopírované do schránky');
+    }).catch(() => {
+        alert('Skopírované!');
     });
 }
