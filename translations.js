@@ -112,3 +112,13 @@ const CONTACT_TRANSLATIONS = {
         closeBtn: 'Cerrar'
     }
 };
+
+// Funkcia na získanie dostupných jazykov
+function getAvailableLanguages() {
+    return Object.keys(UI_TRANSLATIONS);
+}
+
+// Funkcia na kontrolu či jazyk existuje
+function isLanguageAvailable(langCode) {
+    return UI_TRANSLATIONS.hasOwnProperty(langCode);
+}
