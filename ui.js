@@ -24,6 +24,11 @@ function init() {
     if (adminSession === 'true') {
         isAdminLoggedIn = true;
         document.getElementById('appContainer').classList.add('admin-mode');
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) {
+            adminPanel.classList.remove('hidden');
+        }
+        updateAdminButton();
     }
 }
 
@@ -37,7 +42,9 @@ function updateLanguage() {
     });
 
     const searchInput = document.getElementById('searchInput');
-    if (searchInput) searchInput.placeholder = t.search || 'Hľadať...';
+    if (searchInput) {
+        searchInput.placeholder = t.search || 'Hľadať...';
+    }
 
     if (!document.getElementById('categoriesView').classList.contains('hidden')) {
         renderCategories();
@@ -185,7 +192,9 @@ function getUiText(key) {
         }
     };
 
-    return (map[key] && (map[key][lang] || map[key].de)) || key;
+    const text = map[key];
+    if (!text) return key;
+    return text[lang] || text.de || key;
 }
 
 function getTreeCountText(count) {
@@ -248,6 +257,24 @@ function showSection(section) {
 
 function showMainMenu() {
     showSection('diagnostic');
+}
+
+// PRIDANÉ: Funkcia pre zatvorenie wizardu
+function closeWizard() {
+    if (currentCategory === 'elektro') {
+        showElectricSubcategories();
+    } else {
+        showDiagnoses(currentCategory);
+    }
+}
+
+// PRIDANÉ: Funkcia pre spracovanie vstupu z vyhľadávania
+function handleSearchInput(value) {
+    // Voláme handleSearch s oneskorením pre lepší UX
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => {
+        handleSearch(value, false);
+    }, 300);
 }
 
 function renderCategories() {
@@ -356,6 +383,7 @@ function showDiagnoses(categoryId) {
     if (!cat.diagnoses || cat.diagnoses.length === 0) {
         list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
     } else {
+        const lang = appData.currentLang;
         list.innerHTML = cat.diagnoses.map(d => {
             const dt = d.translations[lang] || d.translations['de'];
             return `
@@ -415,7 +443,7 @@ function searchErrorCode(code) {
             <div style="background:var(--card);border-radius:14px;padding:15px;border:1px solid #dbe4f0;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
                     <span style="font-size:1.3em;font-weight:800;color:var(--primary);">${found.code}</span>
-                    <span style="background:${found.severity === 'high' ? '#fee2e2' : found.severity === 'medium' ? '#fef3c7' : '#dcfce7'};color:${found.severity === 'high' ? '#dc2626' : found.severity === 'medium' ? '#d97706' : '#16a34a'};padding:4px 10px;border-radius:20px;font-size:0.8em;font-weight:700;">${severityText}</span>
+                    <span class="${severityClass}" style="padding:4px 10px;border-radius:20px;font-size:0.8em;font-weight:700;">${severityText}</span>
                 </div>
                 
                 <div style="margin-bottom:12px;">
