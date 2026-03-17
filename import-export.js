@@ -3,6 +3,7 @@
 function openExportModal() {
     closeAdminModal();
     document.getElementById('exportModal').classList.add('active');
+    updateExportOptions();
 }
 
 function closeExportModal() {
@@ -11,10 +12,11 @@ function closeExportModal() {
 
 function openImportModal() {
     closeAdminModal();
-    document.getElementById('importStep1').classList.remove('hidden');
-    document.getElementById('importTreeStep').classList.add('hidden');
-    document.getElementById('importErrorStep').classList.add('hidden');
     document.getElementById('importModal').classList.add('active');
+    // Reset
+    document.getElementById('importBrandSection').classList.add('hidden');
+    document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById('importJson').value = '';
 }
 
 function closeImportModal() {
@@ -22,231 +24,258 @@ function closeImportModal() {
 }
 
 function selectImportType(type) {
+    document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+
+    const brandSection = document.getElementById('importBrandSection');
+    
+    if (type === 'error' || type === 'manual') {
+        brandSection.classList.remove('hidden');
+        initBrandGrid('importBrandGrid');
+    } else {
+        brandSection.classList.add('hidden');
+    }
+    
+    // Uložíme typ pre processImport
     document.getElementById('selectedImportType').value = type;
-
-    if (type === 'tree') {
-        document.getElementById('importStep1').classList.add('hidden');
-        document.getElementById('importTreeStep').classList.remove('hidden');
-        document.getElementById('importErrorStep').classList.add('hidden');
-        populateReplaceTreeSelect();
-
-        document.querySelectorAll('input[name="treeImportAction"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.getElementById('replaceTreeSelect').style.display = this.value === 'replace' ? 'block' : 'none';
-            });
-        });
-    } else if (type === 'errorcodes') {
-        document.getElementById('importStep1').classList.add('hidden');
-        document.getElementById('importTreeStep').classList.add('hidden');
-        document.getElementById('importErrorStep').classList.remove('hidden');
-    }
 }
 
-function backToImportStep1() {
-    document.getElementById('importStep1').classList.remove('hidden');
-    document.getElementById('importTreeStep').classList.add('hidden');
-    document.getElementById('importErrorStep').classList.add('hidden');
+function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('importJson').value = e.target.result;
+    };
+    reader.readAsText(file);
 }
 
-function doExport() {
-    const treeId = document.getElementById('exportTreeSelect').value;
-    const dataToExport = findTree(treeId);
-
-    if (!dataToExport) {
-        alert('Strom nebol nájdený!');
+function processImport() {
+    const jsonText = document.getElementById('importJson').value.trim();
+    if (!jsonText) {
+        showNotification('Vložte JSON kód', 'error');
         return;
     }
 
-    const json = JSON.stringify(dataToExport, null, 2);
-    document.getElementById('exportCodeDisplay').textContent = json;
-    document.getElementById('exportCodeModal').classList.add('active');
-    closeExportModal();
-}
-
-function closeExportCodeModal() {
-    document.getElementById('exportCodeModal').classList.remove('active');
-}
-
-function copyExportCode() {
-    const text = document.getElementById('exportCodeDisplay').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        alert('Kód skopírovaný!');
-    });
-}
-
-function downloadExportCode() {
-    const text = document.getElementById('exportCodeDisplay').textContent;
-    const blob = new Blob([text], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'strom.json';
-    a.click();
-}
-
-function normalizeImportText(value) {
-    return (value || '')
-        .toString()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-}
-
-function isEblTree(data) {
-    const haystack = [
-        data?.id,
-        data?.title,
-        data?.name,
-        data?.desc,
-        data?.description,
-        data?.device,
-        data?.brand
-    ].map(normalizeImportText).join(' ');
-
-    return (
-        haystack.includes('ebl') ||
-        haystack.includes('nordelettronica') ||
-        haystack.includes('nord elettronica') ||
-        haystack.includes('nordellettronica') ||
-        haystack.includes('schaudt') ||
-        haystack.includes('cbe')
-    );
-}
-
-function getCategoryById(id) {
-    return appData.categories.find(c => c.id === id);
-}
-
-function getImportTargetCategory(data) {
-    const targetId = isEblTree(data) ? 'ebl' : 'elektro';
-    return getCategoryById(targetId) || getCategoryById('elektro') || appData.categories[0];
-}
-
-function removeDiagnosisFromAllCategories(id) {
-    for (const cat of appData.categories) {
-        if (!cat.diagnoses) continue;
-        cat.diagnoses = cat.diagnoses.filter(d => d.id !== id);
-    }
-}
-
-function doImportTree() {
-    const code = document.getElementById('importTreeCode').value;
-    if (!code.trim()) {
-        alert('Vložte kód!');
-        return;
-    }
+    const type = document.getElementById('selectedImportType').value || 'complete';
+    const action = document.getElementById('importAction').value;
 
     try {
-        const data = JSON.parse(code);
-        const action = document.querySelector('input[name="treeImportAction"]:checked').value;
+        const data = JSON.parse(jsonText);
 
-        if (action === 'new') {
-            if (!data.id || typeof data.id !== 'string' || !data.id.trim()) {
-                data.id = 'imported-' + Date.now();
-            }
-
-            removeDiagnosisFromAllCategories(data.id);
-
-            const targetCat = getImportTargetCategory(data);
-            if (!targetCat.diagnoses) targetCat.diagnoses = [];
-            targetCat.diagnoses.push(data);
+        if (type === 'tree') {
+            importTree(data, action);
+        } else if (type === 'error') {
+            importErrors(data, action);
+        } else if (type === 'manual') {
+            importManual(data, action);
+        } else if (type === 'photo') {
+            importPhotos(data, action);
         } else {
-            const replaceId = document.getElementById('replaceTreeSelect').value;
-            let replaced = false;
-
-            removeDiagnosisFromAllCategories(replaceId);
-            data.id = replaceId;
-
-            const targetCat = getImportTargetCategory(data);
-            if (!targetCat.diagnoses) targetCat.diagnoses = [];
-            targetCat.diagnoses.push(data);
-            replaced = true;
-
-            if (!replaced) {
-                throw new Error('Nepodarilo sa nahradiť vybraný strom.');
-            }
+            importComplete(data, action);
         }
 
         saveDataToStorage();
-        alert('Import úspešný!');
-        renderCategories();
-        populateExportSelects();
         closeImportModal();
-    } catch (err) {
-        alert('Chyba: ' + err.message);
+        showNotification('Import úspešný');
+
+        if (typeof renderCategories === 'function') renderCategories();
+
+    } catch (e) {
+        showNotification('Chyba v JSON: ' + e.message, 'error');
     }
 }
 
-function handleTreeFileImport(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+function importTree(data, action) {
+    if (!data.id || !data.translations) {
+        throw new Error('Neplatný formát stromu');
+    }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('importTreeCode').value = e.target.result;
-    };
-    reader.readAsText(file);
+    let category = appData.categories.find(c => c.id === data.categoryId);
+    if (!category) {
+        category = appData.categories[0];
+    }
+
+    if (!category.diagnoses) category.diagnoses = [];
+
+    const existingIndex = category.diagnoses.findIndex(d => d.id === data.id);
+
+    if (action === 'replace' && existingIndex >= 0) {
+        category.diagnoses[existingIndex] = data;
+    } else if (action === 'merge' && existingIndex >= 0) {
+        category.diagnoses[existingIndex].steps = {
+            ...category.diagnoses[existingIndex].steps,
+            ...data.steps
+        };
+    } else {
+        category.diagnoses.push(data);
+    }
 }
 
-function doImportErrorCodes() {
-    const code = document.getElementById('importErrorCode').value;
-    const brandId = document.getElementById('selectedBrand').value;
-    const model = document.getElementById('importDeviceModel').value;
+function importErrors(data, action) {
+    if (!appData.errorCodes) appData.errorCodes = {};
 
-    if (!brandId) {
-        alert('Vyberte značku!');
-        return;
+    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
+
+    if (!appData.errorCodes[brand]) appData.errorCodes[brand] = [];
+
+    if (Array.isArray(data)) {
+        if (action === 'replace') {
+            appData.errorCodes[brand] = data;
+        } else {
+            appData.errorCodes[brand] = [...appData.errorCodes[brand], ...data];
+        }
+    } else {
+        appData.errorCodes[brand].push(data);
     }
+}
 
-    if (!code.trim()) {
-        alert('Vložte kód!');
-        return;
+function importManual(data, action) {
+    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
+
+    if (!MANUALS_DATA[brand]) MANUALS_DATA[brand] = { name: brand, items: [] };
+
+    if (Array.isArray(data)) {
+        if (action === 'replace') {
+            MANUALS_DATA[brand].items = data;
+        } else {
+            MANUALS_DATA[brand].items = [...MANUALS_DATA[brand].items, ...data];
+        }
+    } else {
+        MANUALS_DATA[brand].items.push(data);
     }
+}
 
-    try {
-        const data = JSON.parse(code);
-
-        if (!appData.errorCodes) appData.errorCodes = {};
-
-        const newCodes = Array.isArray(data) ? data : (data.codes || []);
-
-        newCodes.forEach(ec => {
-            appData.errorCodes[ec.code] = {
-                ...ec,
-                device: CONFIG.DEVICE_BRANDS.find(b => b.id === brandId)?.name || brandId,
-                brand: brandId,
-                model: model || ''
-            };
+function importPhotos(data, action) {
+    if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
+    if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
+    if (data.categoryPhotos) {
+        Object.entries(data.categoryPhotos).forEach(([catId, photo]) => {
+            const cat = appData.categories.find(c => c.id === catId);
+            if (cat) cat.iconPhoto = photo;
         });
+    }
+    loadPhotos();
+}
 
-        saveDataToStorage();
-        alert('Import úspešný!');
-        closeImportModal();
-    } catch (err) {
-        alert('Chyba: ' + err.message);
+function importComplete(data, action) {
+    if (action === 'replace') {
+        Object.assign(appData, data);
+    } else {
+        if (data.categories) {
+            data.categories.forEach(newCat => {
+                const existing = appData.categories.find(c => c.id === newCat.id);
+                if (existing) {
+                    existing.diagnoses = [...(existing.diagnoses || []), ...(newCat.diagnoses || [])];
+                } else {
+                    appData.categories.push(newCat);
+                }
+            });
+        }
     }
 }
 
-function handleErrorFileImport(event) {
-    const file = event.target.files[0];
-    if (!file) return;
+function updateExportOptions() {
+    const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
+    const selectSection = document.getElementById('exportSelectSection');
+    const brandSection = document.getElementById('exportBrandSection');
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('importErrorCode').value = e.target.result;
-    };
-    reader.readAsText(file);
+    selectSection.classList.add('hidden');
+    brandSection.classList.add('hidden');
+
+    if (type === 'category') {
+        selectSection.classList.remove('hidden');
+        const select = document.getElementById('exportSelect');
+        select.innerHTML = appData.categories.map(cat => {
+            const t = cat.translations[appData.currentLang] || cat.translations.de;
+            return `<option value="${cat.id}">${t.name}</option>`;
+        }).join('');
+    } else if (type === 'tree') {
+        selectSection.classList.remove('hidden');
+        const select = document.getElementById('exportSelect');
+        let options = '';
+        appData.categories.forEach(cat => {
+            if (cat.diagnoses) {
+                cat.diagnoses.forEach(diag => {
+                    const t = diag.translations[appData.currentLang] || diag.translations.de;
+                    options += `<option value="${cat.id}:${diag.id}">${t.title}</option>`;
+                });
+            }
+        });
+        select.innerHTML = options;
+    } else if (type === 'errors' || type === 'manuals') {
+        brandSection.classList.remove('hidden');
+        initBrandGrid('exportBrandGrid');
+    }
 }
 
-function clearAllData() {
-    if (!confirm('Naozaj vymazať všetko?')) return;
+function processExport() {
+    const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
+    const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'json';
 
-    appData = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
-    saveDataToStorage();
+    let data = {};
 
-    renderCategories();
-    populateExportSelects();
-    loadPhotos();
-    updateFlagDisplay();
-    closeAdminModal();
+    switch(type) {
+        case 'all':
+            data = JSON.parse(JSON.stringify(appData));
+            break;
+        case 'trees':
+            data = { categories: appData.categories.map(c => ({ id: c.id, diagnoses: c.diagnoses })) };
+            break;
+        case 'errors':
+            const errorBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
+            data = errorBrand ? { [errorBrand]: appData.errorCodes[errorBrand] } : appData.errorCodes;
+            break;
+        case 'manuals':
+            const manualBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
+            data = manualBrand ? { [manualBrand]: MANUALS_DATA[manualBrand] } : MANUALS_DATA;
+            break;
+        case 'photos':
+            data = {
+                logoPhoto: appData.logoPhoto,
+                contactPhoto: appData.contactPhoto,
+                categoryPhotos: {}
+            };
+            appData.categories.forEach(c => {
+                if (c.iconPhoto) data.categoryPhotos[c.id] = c.iconPhoto;
+            });
+            break;
+        case 'category':
+            const catId = document.getElementById('exportSelect').value;
+            const cat = appData.categories.find(c => c.id === catId);
+            data = cat;
+            break;
+        case 'tree':
+            const [treeCatId, treeId] = document.getElementById('exportSelect').value.split(':');
+            const treeCat = appData.categories.find(c => c.id === treeCatId);
+            data = treeCat?.diagnoses?.find(d => d.id === treeId);
+            break;
+    }
+
+    const jsonString = format === 'pretty' ? JSON.stringify(data, null, 2) : JSON.stringify(data);
+
+    document.getElementById('exportResult').textContent = jsonString;
+
+    navigator.clipboard.writeText(jsonString).then(() => {
+        showNotification('Skopírované do schránky');
+    });
+}
+
+function downloadExport() {
+    const content = document.getElementById('exportResult').textContent;
+    if (!content) {
+        showNotification('Najprv vytvorte export', 'error');
+        return;
+    }
+
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `diagnostika-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showNotification('Súbor stiahnutý');
 }
