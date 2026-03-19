@@ -138,7 +138,6 @@ function editTree(diagId) {
     currentEditingTree = diagId;
     const tree = findTree(diagId);
     
-    // Vytvoríme jednoduchý editor namiesto modálneho okna
     const content = document.getElementById('editorContent');
     content.innerHTML = `
         <h2 style="margin-bottom: 15px; font-size: 1.2em;">Editovať strom</h2>
