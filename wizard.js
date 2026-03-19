@@ -1,8 +1,9 @@
-// Wizard funkcie
+// Wizard funkcie - Fixed Version 5.5
 
 function startWizard(diagnosisId) {
     if (!diagnosisId) {
         console.error('startWizard: chýba diagnosisId');
+        showNotification('Chyba: Neplatná diagnóza', 'error');
         return;
     }
     
@@ -11,6 +12,7 @@ function startWizard(diagnosisId) {
     
     if (!cat) {
         console.error('startWizard: nenájdená kategória', currentCategory);
+        showNotification('Chyba: Kategória nebola nájdená', 'error');
         return;
     }
     
@@ -36,9 +38,17 @@ function startWizard(diagnosisId) {
         results: diag.results || {}
     };
 
-    document.getElementById('diagnosesView')?.classList.add('hidden');
-    document.getElementById('errorCodesView')?.classList.add('hidden');
-    document.getElementById('wizardView')?.classList.remove('hidden');
+    const diagnosesView = document.getElementById('diagnosesView');
+    const errorCodesView = document.getElementById('errorCodesView');
+    const wizardView = document.getElementById('wizardView');
+    
+    if (diagnosesView) diagnosesView.classList.add('hidden');
+    if (errorCodesView) errorCodesView.classList.add('hidden');
+    if (wizardView) {
+        wizardView.classList.remove('hidden');
+        wizardView.scrollTop = 0;
+    }
+    
     document.body.classList.add('wizard-active');
 
     const wizardCategoryLink = document.getElementById('wizardCategoryLink');
@@ -114,7 +124,7 @@ function renderWizard() {
                     <div class="result error">
                         Chyba: Výsledok nebol nájdený
                     </div>
-                    <div class="wizard-buttons">
+                    <div class="wizard-result-buttons">
                         <button class="btn-back" onclick="goBackFromResult()">← ${t.back}</button>
                         <button class="btn-restart" onclick="restartWizard()">🔄 ${t.restart}</button>
                     </div>
@@ -123,23 +133,26 @@ function renderWizard() {
             return;
         }
         
+        let resultType = 'success';
+        let resultText = '';
+        
+        if (typeof result === 'string') {
+            resultText = result;
+        } else if (typeof result === 'object') {
+            resultText = result.text || result.message || JSON.stringify(result);
+            resultType = result.type || 'success';
+        }
+        
         content.innerHTML = `
             <div class="wizard-stage">
                 <div class="wizard-result-buttons">
-                    <button class="btn-back" onclick="goBackFromResult()">
-                        ← ${t.back}
-                    </button>
-                    <button class="btn-restart" onclick="restartWizard()">
-                        🔄 ${t.restart}
-                    </button>
-                    <button class="btn-export-path" onclick="exportPath()">
-                        📋 ${t.exportPath}
-                    </button>
+                    <button class="btn-back" onclick="goBackFromResult()">← ${t.back}</button>
+                    <button class="btn-restart" onclick="restartWizard()">🔄 ${t.restart}</button>
+                    <button class="btn-export-path" onclick="exportPath()">📋 ${t.exportPath || 'Exportovať cestu'}</button>
                 </div>
-
                 <div class="wizard-result-box">
-                    <div class="result ${result.type || 'success'}">
-                        ${result.text || result}
+                    <div class="result ${resultType}">
+                        ${resultText}
                     </div>
                 </div>
             </div>
@@ -156,7 +169,7 @@ function renderWizard() {
                 <div class="result error">
                     Chyba: Krok ${currentStep} nebol nájdený
                 </div>
-                <div class="wizard-buttons">
+                <div class="wizard-result-buttons">
                     <button class="btn-back" onclick="goBack()">← ${t.back}</button>
                     <button class="btn-restart" onclick="restartWizard()">🔄 ${t.restart}</button>
                 </div>
@@ -168,32 +181,19 @@ function renderWizard() {
     const questionText = step.q || step.question || 'Otázka';
     const stepNumber = parseInt(currentStep) + 1;
 
-    // ============================================
-    // HLAVNÁ ZMENA: Poradie tlačidiel podľa CSS
-    // Nie (vľavo) → Áno (vpravo) → Späť (dole)
-    // ============================================
     content.innerHTML = `
         <div class="wizard-stage">
             <div class="step-number">${stepNumber}</div>
-
-            <div class="question">
-                ${questionText}
-            </div>
-
+            <div class="question">${questionText}</div>
             <div class="wizard-buttons">
-                <!-- NIE - prvé v DOM (grid-column: 1) -->
                 <button class="btn-no" onclick="answer(false)">
                     <span class="btn-icon">✗</span>
                     <span>${t.no}</span>
                 </button>
-                
-                <!-- ÁNO - druhé v DOM (grid-column: 2) -->
                 <button class="btn-yes" onclick="answer(true)">
                     <span class="btn-icon">✓</span>
                     <span>${t.yes}</span>
                 </button>
-                
-                <!-- SPÄŤ - tretie v DOM (grid-column: 1 / -1) -->
                 ${currentStep > 0 ? `
                     <button class="btn-back" onclick="goBack()">
                         <span class="btn-icon">←</span>
@@ -208,6 +208,9 @@ function renderWizard() {
             </div>
         </div>
     `;
+    
+    const wizardView = document.getElementById('wizardView');
+    if (wizardView) wizardView.scrollTop = 0;
 }
 
 function restartWizard() {
@@ -238,7 +241,7 @@ function goBackFromResult() {
             
             if (!step) break;
             
-            currentStep = p.answer === 'yes' ? (step.yes || step.yesStep) : (step.no || step.noStep);
+            currentStep = p.answer === 'yes' ? (step.yes ?? step.yesStep) : (step.no ?? step.noStep);
         }
 
         renderWizard();
@@ -253,6 +256,7 @@ function answer(isYes) {
     
     if (!diag) {
         console.error('answer: nenájdený strom');
+        showNotification('Chyba: Strom nebol nájdený', 'error');
         return;
     }
     
@@ -265,6 +269,7 @@ function answer(isYes) {
     
     if (!step) {
         console.error('answer: nenájdený step', currentStep);
+        showNotification('Chyba: Krok nebol nájdený', 'error');
         return;
     }
 
@@ -273,7 +278,7 @@ function answer(isYes) {
         answer: isYes ? 'yes' : 'no'
     });
 
-    const nextStep = isYes ? (step.yes || step.yesStep) : (step.no || step.noStep);
+    const nextStep = isYes ? (step.yes ?? step.yesStep) : (step.no ?? step.noStep);
     
     if (nextStep === undefined || nextStep === null) {
         console.error('answer: chýbajúca nasledujúca hodnota', { isYes, step });
@@ -313,7 +318,7 @@ function goBack() {
             
             if (!step) break;
             
-            currentStep = p.answer === 'yes' ? (step.yes || step.yesStep) : (step.no || step.noStep);
+            currentStep = p.answer === 'yes' ? (step.yes ?? step.yesStep) : (step.no ?? step.noStep);
         }
 
         renderWizard();
@@ -372,15 +377,32 @@ function copyPathText() {
     if (!pathTextDisplay) return;
     
     const text = pathTextDisplay.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Skopírované do schránky');
-    }).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        document.body.appendChild(textarea);
-        textarea.select();
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('Skopírované do schránky');
+        }).catch(() => {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    
+    try {
         document.execCommand('copy');
-        document.body.removeChild(textarea);
         showNotification('Skopírované do schránky');
-    });
+    } catch (err) {
+        showNotification('Chyba pri kopírovaní', 'error');
+    }
+    
+    document.body.removeChild(textarea);
 }
