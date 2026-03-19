@@ -19,7 +19,6 @@ function updateAdminStatus() {
     const statusEl = document.getElementById('adminStatus');
     if (!statusEl) return;
     
-    // Používame globálnu premennú z app.js
     if (typeof isAdminLoggedIn !== 'undefined' && isAdminLoggedIn) {
         statusEl.textContent = '• Admin';
         statusEl.style.color = '#22c55e';
@@ -29,27 +28,20 @@ function updateAdminStatus() {
 }
 
 function loadPhotos() {
-    const headerIconImg = document.getElementById('headerIconImg');
-    const headerIconText = document.getElementById('headerIconText');
-    const contactBtnImg = document.getElementById('contactBtnImg');
-    const contactBtnText = document.getElementById('contactBtnText');
+    const logoIcon = document.getElementById('logoIcon');
     const contactModalImg = document.getElementById('contactModalImg');
     const contactModalText = document.getElementById('contactModalText');
     
-    if (appData.headerPhoto && headerIconImg && headerIconText) {
-        headerIconImg.src = appData.headerPhoto;
-        headerIconImg.classList.remove('hidden');
-        headerIconText.classList.add('hidden');
+    if (appData.logoPhoto && logoIcon) {
+        logoIcon.innerHTML = `<img src="${appData.logoPhoto}" style="width:100%;height:100%;object-fit:cover;"><span class="edit-badge">✏️</span>`;
     }
+    
     if (appData.contactPhoto) {
-        if (contactBtnImg && contactBtnText) {
-            contactBtnImg.src = appData.contactPhoto;
-            contactBtnImg.classList.remove('hidden');
-            contactBtnText.classList.add('hidden');
-        }
-        if (contactModalImg && contactModalText) {
+        if (contactModalImg) {
             contactModalImg.src = appData.contactPhoto;
             contactModalImg.classList.remove('hidden');
+        }
+        if (contactModalText) {
             contactModalText.classList.add('hidden');
         }
     }
@@ -87,7 +79,6 @@ function selectBrand(brandId, gridId = 'brandGrid') {
 }
 
 function populateExportSelects() {
-    // Táto funkcia je volaná z import-export.js
     updateExportOptions();
 }
 
@@ -120,9 +111,7 @@ function closeModal(event) {
     }
 }
 
-// PRIDANÉ: Funkcia pre zatvorenie admin modálu
 function closeAdminModal() {
-    // Admin panel je teraz trvalo viditeľný, takže táto funkcia len skryje panel
     const adminPanel = document.getElementById('adminPanel');
     if (adminPanel) {
         adminPanel.classList.add('hidden');
@@ -130,7 +119,6 @@ function closeAdminModal() {
     updateAdminButton();
 }
 
-// PRIDANÉ: Funkcia pre aktualizáciu admin tlačidla
 function updateAdminButton() {
     const btn = document.getElementById('adminBtn');
     const panel = document.getElementById('adminPanel');
