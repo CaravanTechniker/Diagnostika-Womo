@@ -30,20 +30,17 @@ function startWizard(diagnosisId) {
     
     const lang = appData.currentLang;
     
-    // Získame správne preklady
     const dt = diag.translations?.[lang] || diag.translations?.['de'] || diag.translations?.['sk'] || {
         title: diag.title || diag.name || 'Diagnóza',
         steps: diag.steps || {},
         results: diag.results || {}
     };
 
-    // Skryjeme ostatné viewy
     document.getElementById('diagnosesView')?.classList.add('hidden');
     document.getElementById('errorCodesView')?.classList.add('hidden');
     document.getElementById('wizardView')?.classList.remove('hidden');
     document.body.classList.add('wizard-active');
 
-    // Aktualizujeme breadcrumb
     const wizardCategoryLink = document.getElementById('wizardCategoryLink');
     const wizardDiagnosisName = document.getElementById('wizardDiagnosisName');
     
@@ -73,7 +70,6 @@ function renderWizard() {
     
     const lang = appData.currentLang;
     
-    // Získame správne preklady
     const data = diag.translations?.[lang] || diag.translations?.['de'] || diag.translations?.['sk'] || {
         title: diag.title || diag.name || 'Diagnóza',
         steps: diag.steps || {},
@@ -88,7 +84,6 @@ function renderWizard() {
         return;
     }
 
-    // Aktualizácia path history
     const pathHistoryBox = document.getElementById('pathHistory');
     const pathContent = document.getElementById('pathContent');
     
@@ -108,14 +103,12 @@ function renderWizard() {
         }
     }
 
-    // KONTROLA: Či sme na konci (result)
     const isResult = typeof currentStep === 'string' && currentStep.startsWith('result');
     
     if (isResult) {
         const result = data.results?.[currentStep];
         
         if (!result) {
-            console.error('renderWizard: nenájený result', currentStep);
             content.innerHTML = `
                 <div class="wizard-stage">
                     <div class="result error">
@@ -130,7 +123,6 @@ function renderWizard() {
             return;
         }
         
-        // ZOBRAZENIE VÝSLEDKU S TLACIDLAMI
         content.innerHTML = `
             <div class="wizard-stage">
                 <div class="wizard-result-buttons">
@@ -155,7 +147,6 @@ function renderWizard() {
         return;
     }
 
-    // KONTROLA: Či existuje step
     const step = data.steps?.[currentStep];
     
     if (!step) {
@@ -174,7 +165,6 @@ function renderWizard() {
         return;
     }
 
-    // HLAVNÉ ZOBRAZENIE S TLACIDLAMI ÁNO/NIE
     const questionText = step.q || step.question || 'Otázka';
     const stepNumber = parseInt(currentStep) + 1;
 
@@ -274,7 +264,6 @@ function answer(isYes) {
         answer: isYes ? 'yes' : 'no'
     });
 
-    // Podpora oboch formátov
     const nextStep = isYes ? (step.yes || step.yesStep) : (step.no || step.noStep);
     
     if (nextStep === undefined || nextStep === null) {
@@ -286,7 +275,6 @@ function answer(isYes) {
     currentStep = nextStep;
     renderWizard();
 
-    // Scroll na začiatok
     const wizardView = document.getElementById('wizardView');
     if (wizardView) wizardView.scrollTop = 0;
     
