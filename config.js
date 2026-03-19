@@ -1,7 +1,9 @@
-// Konfigurácia aplikácie
+// Konfigurácia aplikácie - Fixed Version 5.5
+
 const CONFIG = {
     ADMIN_PASSWORD: '1310',
     VERSION: '5.5',
+    APP_NAME: 'Caravan Diagnostic',
 
     FLAG_URLS: {
         de: 'https://flagcdn.com/w40/de.png',
@@ -49,7 +51,6 @@ const CONFIG = {
     ]
 };
 
-// Mapovanie stromov na podkategórie
 const TREE_TO_SUBCATEGORY = {
     'elektrina_hlavny_router': 'router',
     '12v_system_bez_napatia': 'router',
@@ -159,7 +160,6 @@ const TREE_TO_SUBCATEGORY = {
     'ebl_vnutorna_cesta_spalena': 'ebl'
 };
 
-// Manuály dáta
 const MANUALS_DATA = {
     truma: { name: 'Truma', items: [] },
     thetford: { name: 'Thetford', items: [] },
@@ -173,7 +173,6 @@ const MANUALS_DATA = {
     other: { name: 'Iné', items: [] }
 };
 
-// Default dáta aplikácie
 const DEFAULT_APP_DATA = {
     languages: {
         de: { name: 'Deutsch', code: 'DE' },
@@ -186,6 +185,7 @@ const DEFAULT_APP_DATA = {
     currentLang: 'de',
     headerPhoto: null,
     contactPhoto: null,
+    logoPhoto: null,
     categories: [
         {
             id: 'elektro',
