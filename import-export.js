@@ -1,41 +1,70 @@
-// Import a export funkcie
+// Import a export funkcie - Fixed Version 5.5
 
 function openExportModal() {
     closeAdminModal();
-    document.getElementById('exportModal').classList.add('active');
+    const modal = document.getElementById('exportModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
     updateExportOptions();
 }
 
 function closeExportModal() {
-    document.getElementById('exportModal').classList.remove('active');
+    const modal = document.getElementById('exportModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function openImportModal() {
     closeAdminModal();
-    document.getElementById('importModal').classList.add('active');
-    document.getElementById('importBrandSection').classList.add('hidden');
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
+    
+    const brandSection = document.getElementById('importBrandSection');
+    if (brandSection) {
+        brandSection.classList.add('hidden');
+    }
+    
     document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
-    document.getElementById('importJson').value = '';
+    
+    const importJson = document.getElementById('importJson');
+    if (importJson) {
+        importJson.value = '';
+    }
 }
 
 function closeImportModal() {
-    document.getElementById('importModal').classList.remove('active');
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function selectImportType(type) {
     document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('selected');
+    }
 
     const brandSection = document.getElementById('importBrandSection');
     
-    if (type === 'error' || type === 'manual') {
-        brandSection.classList.remove('hidden');
-        initBrandGrid('importBrandGrid');
-    } else {
-        brandSection.classList.add('hidden');
+    if (brandSection) {
+        if (type === 'error' || type === 'manual') {
+            brandSection.classList.remove('hidden');
+            initBrandGrid('importBrandGrid');
+        } else {
+            brandSection.classList.add('hidden');
+        }
     }
     
-    document.getElementById('selectedImportType').value = type;
+    const selectedImportType = document.getElementById('selectedImportType');
+    if (selectedImportType) {
+        selectedImportType.value = type;
+    }
 }
 
 function handleImportFile(event) {
@@ -44,20 +73,34 @@ function handleImportFile(event) {
 
     const reader = new FileReader();
     reader.onload = function(e) {
-        document.getElementById('importJson').value = e.target.result;
+        const importJson = document.getElementById('importJson');
+        if (importJson) {
+            importJson.value = e.target.result;
+        }
     };
+    
+    reader.onerror = function() {
+        showNotification('Chyba pri čítaní súboru', 'error');
+    };
+    
     reader.readAsText(file);
 }
 
 function processImport() {
-    const jsonText = document.getElementById('importJson').value.trim();
+    const importJson = document.getElementById('importJson');
+    if (!importJson) return;
+    
+    const jsonText = importJson.value.trim();
     if (!jsonText) {
         showNotification('Vložte JSON kód', 'error');
         return;
     }
 
-    const type = document.getElementById('selectedImportType').value || 'complete';
-    const action = document.getElementById('importAction').value;
+    const selectedImportType = document.getElementById('selectedImportType');
+    const type = selectedImportType ? (selectedImportType.value || 'complete') : 'complete';
+    
+    const importAction = document.getElementById('importAction');
+    const action = importAction ? importAction.value : 'new';
 
     try {
         const data = JSON.parse(jsonText);
@@ -114,7 +157,8 @@ function importTree(data, action) {
 function importErrors(data, action) {
     if (!appData.errorCodes) appData.errorCodes = {};
 
-    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
+    const selectedBrand = document.querySelector('#importBrandGrid .selected');
+    const brand = selectedBrand ? selectedBrand.dataset.brand : 'other';
 
     if (!appData.errorCodes[brand]) appData.errorCodes[brand] = [];
 
@@ -124,13 +168,14 @@ function importErrors(data, action) {
         } else {
             appData.errorCodes[brand] = [...appData.errorCodes[brand], ...data];
         }
-    } else {
+    } else if (data && typeof data === 'object') {
         appData.errorCodes[brand].push(data);
     }
 }
 
 function importManual(data, action) {
-    const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
+    const selectedBrand = document.querySelector('#importBrandGrid .selected');
+    const brand = selectedBrand ? selectedBrand.dataset.brand : 'other';
 
     if (!MANUALS_DATA[brand]) MANUALS_DATA[brand] = { name: brand, items: [] };
 
@@ -140,7 +185,7 @@ function importManual(data, action) {
         } else {
             MANUALS_DATA[brand].items = [...MANUALS_DATA[brand].items, ...data];
         }
-    } else {
+    } else if (data && typeof data === 'object') {
         MANUALS_DATA[brand].items.push(data);
     }
 }
@@ -148,7 +193,7 @@ function importManual(data, action) {
 function importPhotos(data, action) {
     if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
     if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
-    if (data.categoryPhotos) {
+    if (data.categoryPhotos && typeof data.categoryPhotos === 'object') {
         Object.entries(data.categoryPhotos).forEach(([catId, photo]) => {
             const cat = appData.categories.find(c => c.id === catId);
             if (cat) cat.iconPhoto = photo;
@@ -159,58 +204,78 @@ function importPhotos(data, action) {
 
 function importComplete(data, action) {
     if (action === 'replace') {
+        const savedLang = appData.currentLang;
         Object.assign(appData, data);
+        if (data.currentLang) {
+            appData.currentLang = data.currentLang;
+        }
     } else {
-        if (data.categories) {
+        if (data.categories && Array.isArray(data.categories)) {
             data.categories.forEach(newCat => {
                 const existing = appData.categories.find(c => c.id === newCat.id);
                 if (existing) {
-                    existing.diagnoses = [...(existing.diagnoses || []), ...(newCat.diagnoses || [])];
+                    if (newCat.diagnoses && Array.isArray(newCat.diagnoses)) {
+                        existing.diagnoses = [...(existing.diagnoses || []), ...newCat.diagnoses];
+                    }
                 } else {
                     appData.categories.push(newCat);
                 }
             });
         }
+        
+        if (data.errorCodes && typeof data.errorCodes === 'object') {
+            if (!appData.errorCodes) appData.errorCodes = {};
+            Object.assign(appData.errorCodes, data.errorCodes);
+        }
     }
 }
 
 function updateExportOptions() {
-    const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
+    const exportType = document.querySelector('input[name="exportType"]:checked');
+    const type = exportType ? exportType.value : 'all';
+    
     const selectSection = document.getElementById('exportSelectSection');
     const brandSection = document.getElementById('exportBrandSection');
 
-    selectSection.classList.add('hidden');
-    brandSection.classList.add('hidden');
+    if (selectSection) selectSection.classList.add('hidden');
+    if (brandSection) brandSection.classList.add('hidden');
 
     if (type === 'category') {
-        selectSection.classList.remove('hidden');
+        if (selectSection) selectSection.classList.remove('hidden');
         const select = document.getElementById('exportSelect');
-        select.innerHTML = appData.categories.map(cat => {
-            const t = cat.translations[appData.currentLang] || cat.translations.de;
-            return `<option value="${cat.id}">${t.name}</option>`;
-        }).join('');
+        if (select) {
+            select.innerHTML = appData.categories.map(cat => {
+                const t = cat.translations[appData.currentLang] || cat.translations.de;
+                return `<option value="${cat.id}">${t.name}</option>`;
+            }).join('');
+        }
     } else if (type === 'tree') {
-        selectSection.classList.remove('hidden');
+        if (selectSection) selectSection.classList.remove('hidden');
         const select = document.getElementById('exportSelect');
-        let options = '';
-        appData.categories.forEach(cat => {
-            if (cat.diagnoses) {
-                cat.diagnoses.forEach(diag => {
-                    const t = diag.translations[appData.currentLang] || diag.translations.de;
-                    options += `<option value="${cat.id}:${diag.id}">${t.title}</option>`;
-                });
-            }
-        });
-        select.innerHTML = options;
+        if (select) {
+            let options = '';
+            appData.categories.forEach(cat => {
+                if (cat.diagnoses && Array.isArray(cat.diagnoses)) {
+                    cat.diagnoses.forEach(diag => {
+                        const t = diag.translations[appData.currentLang] || diag.translations.de;
+                        options += `<option value="${cat.id}:${diag.id}">${t.title}</option>`;
+                    });
+                }
+            });
+            select.innerHTML = options;
+        }
     } else if (type === 'errors' || type === 'manuals') {
-        brandSection.classList.remove('hidden');
+        if (brandSection) brandSection.classList.remove('hidden');
         initBrandGrid('exportBrandGrid');
     }
 }
 
 function processExport() {
-    const type = document.querySelector('input[name="exportType"]:checked')?.value || 'all';
-    const format = document.querySelector('input[name="exportFormat"]:checked')?.value || 'json';
+    const exportType = document.querySelector('input[name="exportType"]:checked');
+    const type = exportType ? exportType.value : 'all';
+    
+    const exportFormat = document.querySelector('input[name="exportFormat"]:checked');
+    const format = exportFormat ? exportFormat.value : 'json';
 
     let data = {};
 
@@ -219,15 +284,22 @@ function processExport() {
             data = JSON.parse(JSON.stringify(appData));
             break;
         case 'trees':
-            data = { categories: appData.categories.map(c => ({ id: c.id, diagnoses: c.diagnoses })) };
+            data = { 
+                categories: appData.categories.map(c => ({ 
+                    id: c.id, 
+                    diagnoses: c.diagnoses 
+                })) 
+            };
             break;
         case 'errors':
-            const errorBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = errorBrand ? { [errorBrand]: appData.errorCodes[errorBrand] } : appData.errorCodes;
+            const errorBrand = document.querySelector('#exportBrandGrid .selected');
+            const eb = errorBrand ? errorBrand.dataset.brand : null;
+            data = eb ? { [eb]: appData.errorCodes[eb] } : appData.errorCodes;
             break;
         case 'manuals':
-            const manualBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = manualBrand ? { [manualBrand]: MANUALS_DATA[manualBrand] } : MANUALS_DATA;
+            const manualBrand = document.querySelector('#exportBrandGrid .selected');
+            const mb = manualBrand ? manualBrand.dataset.brand : null;
+            data = mb ? { [mb]: MANUALS_DATA[mb] } : MANUALS_DATA;
             break;
         case 'photos':
             data = {
@@ -240,28 +312,40 @@ function processExport() {
             });
             break;
         case 'category':
-            const catId = document.getElementById('exportSelect').value;
-            const cat = appData.categories.find(c => c.id === catId);
-            data = cat;
+            const exportSelect = document.getElementById('exportSelect');
+            const catId = exportSelect ? exportSelect.value : null;
+            const cat = catId ? appData.categories.find(c => c.id === catId) : null;
+            data = cat || {};
             break;
         case 'tree':
-            const [treeCatId, treeId] = document.getElementById('exportSelect').value.split(':');
-            const treeCat = appData.categories.find(c => c.id === treeCatId);
-            data = treeCat?.diagnoses?.find(d => d.id === treeId);
+            const exportSelectTree = document.getElementById('exportSelect');
+            const treeValue = exportSelectTree ? exportSelectTree.value : '';
+            const [treeCatId, treeId] = treeValue.split(':');
+            const treeCat = treeCatId ? appData.categories.find(c => c.id === treeCatId) : null;
+            data = treeCat && treeId ? (treeCat.diagnoses?.find(d => d.id === treeId) || {}) : {};
             break;
     }
 
     const jsonString = format === 'pretty' ? JSON.stringify(data, null, 2) : JSON.stringify(data);
 
-    document.getElementById('exportResult').textContent = jsonString;
+    const exportResult = document.getElementById('exportResult');
+    if (exportResult) {
+        exportResult.textContent = jsonString;
+    }
 
-    navigator.clipboard.writeText(jsonString).then(() => {
-        showNotification('Skopírované do schránky');
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonString).then(() => {
+            showNotification('Skopírované do schránky');
+        }).catch(() => {
+            showNotification('Chyba pri kopírovaní', 'error');
+        });
+    }
 }
 
 function downloadExport() {
-    const content = document.getElementById('exportResult').textContent;
+    const exportResult = document.getElementById('exportResult');
+    const content = exportResult ? exportResult.textContent : '';
+    
     if (!content) {
         showNotification('Najprv vytvorte export', 'error');
         return;
@@ -272,7 +356,9 @@ function downloadExport() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `diagnostika-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
     showNotification('Súbor stiahnutý');
