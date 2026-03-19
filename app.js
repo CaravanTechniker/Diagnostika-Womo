@@ -7,7 +7,6 @@ let currentPhotoTargetId = null;
 let isAdminLoggedIn = false;
 let isEditMode = false;
 let currentCategory = null;
-// PRIDANÉ - chýbajúce premenné:
 let currentDiagnosis = null;
 let currentStep = 0;
 let pathHistory = [];
