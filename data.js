@@ -1,4 +1,5 @@
-// Globálne premenné
+// Globálne premenné a dátové funkcie - Fixed Version 5.5
+
 let appData = loadDataFromStorage();
 let currentDiagnosis = null;
 let currentStep = 0;
@@ -6,7 +7,6 @@ let pathHistory = [];
 let currentEditingTree = null;
 let currentSection = 'diagnostic';
 
-// Načítanie dát z localStorage
 function loadDataFromStorage() {
     try {
         const stored = localStorage.getItem('caravanDiagnosticData');
@@ -25,31 +25,37 @@ function loadDataFromStorage() {
     return fallback;
 }
 
-// Uloženie dát do localStorage
 function saveDataToStorage() {
     try {
         localStorage.setItem('caravanDiagnosticData', JSON.stringify(appData));
     } catch (e) {
         console.error('Error saving to storage:', e);
-        alert('Chyba pri ukladaní dát.');
+        if (e.name === 'QuotaExceededError') {
+            showNotification('Úložisko je plné. Zmažte niektoré fotky.', 'error');
+        } else {
+            alert('Chyba pri ukladaní dát.');
+        }
     }
 }
 
-// Merge uložených dát s defaultnými
 function mergeWithDefault(stored) {
     const merged = JSON.parse(JSON.stringify(DEFAULT_APP_DATA));
+    
+    if (!stored || typeof stored !== 'object') return merged;
+    
     if (stored.languages) merged.languages = stored.languages;
     if (stored.currentLang) merged.currentLang = stored.currentLang;
-    if (stored.headerPhoto !== undefined) merged.headerPhoto = stored.headerPhoto;
+    if (stored.logoPhoto !== undefined) merged.logoPhoto = stored.logoPhoto;
     if (stored.contactPhoto !== undefined) merged.contactPhoto = stored.contactPhoto;
+    if (stored.headerPhoto !== undefined) merged.headerPhoto = stored.headerPhoto;
 
-    if (stored.categories) {
+    if (stored.categories && Array.isArray(stored.categories)) {
         stored.categories.forEach((storedCat, idx) => {
             if (merged.categories[idx]) {
                 if (storedCat.iconPhoto !== undefined) {
                     merged.categories[idx].iconPhoto = storedCat.iconPhoto;
                 }
-                if (storedCat.diagnoses) {
+                if (storedCat.diagnoses && Array.isArray(storedCat.diagnoses)) {
                     merged.categories[idx].diagnoses = storedCat.diagnoses;
                 }
                 if (storedCat.eblBrands) {
@@ -60,26 +66,29 @@ function mergeWithDefault(stored) {
     }
 
     if (stored.errorCodes) merged.errorCodes = stored.errorCodes;
+    
     return merged;
 }
 
 function normalizeEblText(value) {
-    return (value || '')
-        .toString()
+    if (!value) return '';
+    return String(value)
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
 }
 
 function isEblDiagnosis(diag) {
+    if (!diag || typeof diag !== 'object') return false;
+    
     const haystack = [
-        diag?.id,
-        diag?.title,
-        diag?.name,
-        diag?.desc,
-        diag?.description,
-        diag?.device,
-        diag?.brand
+        diag.id,
+        diag.title,
+        diag.name,
+        diag.desc,
+        diag.description,
+        diag.device,
+        diag.brand
     ].map(normalizeEblText).join(' ');
 
     return (
@@ -124,8 +133,9 @@ function migrateEblDiagnoses(data) {
     }
 }
 
-// Nájdenie stromu podľa ID
 function findTree(treeId) {
+    if (!treeId) return null;
+    
     for (let cat of appData.categories) {
         if (!cat.diagnoses) continue;
         const diag = cat.diagnoses.find(d => d.id === treeId);
@@ -134,18 +144,33 @@ function findTree(treeId) {
     return null;
 }
 
-// Nájdenie chybového kódu
 function findErrorCode(code) {
-    if (appData.errorCodes && appData.errorCodes[code]) {
-        return appData.errorCodes[code];
+    if (!code) return null;
+    
+    const upperCode = code.toUpperCase();
+    
+    if (appData.errorCodes) {
+        if (appData.errorCodes[upperCode]) {
+            return appData.errorCodes[upperCode];
+        }
+        
+        for (const [key, value] of Object.entries(appData.errorCodes)) {
+            if (key.toUpperCase() === upperCode) {
+                return value;
+            }
+        }
     }
 
     for (let cat of appData.categories) {
         if (cat.errorCodeBrands) {
             for (let brand in cat.errorCodeBrands) {
-                const codes = cat.errorCodeBrands[brand].codes || [];
-                const found = codes.find(c => c.code === code);
-                if (found) return found;
+                const brandData = cat.errorCodeBrands[brand];
+                if (brandData && brandData.codes && Array.isArray(brandData.codes)) {
+                    const found = brandData.codes.find(c => 
+                        c.code && c.code.toUpperCase() === upperCode
+                    );
+                    if (found) return found;
+                }
             }
         }
     }
