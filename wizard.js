@@ -168,6 +168,10 @@ function renderWizard() {
     const questionText = step.q || step.question || 'Otázka';
     const stepNumber = parseInt(currentStep) + 1;
 
+    // ============================================
+    // HLAVNÁ ZMENA: Poradie tlačidiel podľa CSS
+    // Nie (vľavo) → Áno (vpravo) → Späť (dole)
+    // ============================================
     content.innerHTML = `
         <div class="wizard-stage">
             <div class="step-number">${stepNumber}</div>
@@ -177,14 +181,19 @@ function renderWizard() {
             </div>
 
             <div class="wizard-buttons">
-                <button class="btn-yes" onclick="answer(true)">
-                    <span class="btn-icon">✓</span>
-                    <span>${t.yes}</span>
-                </button>
+                <!-- NIE - prvé v DOM (grid-column: 1) -->
                 <button class="btn-no" onclick="answer(false)">
                     <span class="btn-icon">✗</span>
                     <span>${t.no}</span>
                 </button>
+                
+                <!-- ÁNO - druhé v DOM (grid-column: 2) -->
+                <button class="btn-yes" onclick="answer(true)">
+                    <span class="btn-icon">✓</span>
+                    <span>${t.yes}</span>
+                </button>
+                
+                <!-- SPÄŤ - tretie v DOM (grid-column: 1 / -1) -->
                 ${currentStep > 0 ? `
                     <button class="btn-back" onclick="goBack()">
                         <span class="btn-icon">←</span>
