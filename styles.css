@@ -1274,17 +1274,20 @@ select {
     transform: translateY(-1px);
 }
 
-/* ===== WIZARD ===== */
+/* ============================================
+   WIZARD - HLAVNÉ ZMENY PRE RESPONSÍVNY DESIGN
+   ============================================ */
 .wizard {
     background: var(--bg-card);
     border-radius: var(--radius);
-    padding: clamp(16px, 4vw, 24px);
+    padding: clamp(12px, 3vw, 20px);
     box-shadow: var(--shadow);
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     min-height: 0;
     height: 100%;
+    gap: 16px;
 }
 
 .wizard.hidden {
@@ -1295,11 +1298,11 @@ select {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: clamp(12px, 3vw, 16px);
     color: var(--text-muted);
     font-size: clamp(12px, 3.5vw, 14px);
     flex-wrap: wrap;
     flex-shrink: 0;
+    margin-bottom: 0;
 }
 
 .wizard-breadcrumb a {
@@ -1308,14 +1311,48 @@ select {
     font-weight: 700;
 }
 
+/* PROGRESS BAR - TERAZ NAHORE, POD BREADCRUMB */
+.path-history {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-left: 4px solid var(--primary);
+    padding: clamp(10px, 2.5vw, 14px);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    flex-shrink: 0;
+    text-align: left;
+    margin-bottom: 0;
+}
+
+.path-history.hidden {
+    display: none !important;
+}
+
+.path-title {
+    font-size: 0.7em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 800;
+}
+
+#pathContent {
+    font-size: 0.9em;
+    color: var(--text);
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* HLAVNÝ OBSAH WIZARDU */
 .wizard-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     min-height: 0;
     overflow-y: auto;
+    gap: 20px;
 }
 
+/* STAGE - OBSAHUJE OTÁZKU A TLÁČIDLÁ */
 .wizard-stage {
     display: flex;
     flex-direction: column;
@@ -1323,100 +1360,115 @@ select {
     text-align: center;
     flex: 1;
     min-height: 0;
-    padding: clamp(10px, 3vw, 20px) 0;
-    gap: clamp(20px, 5vh, 30px);
+    gap: clamp(16px, 4vh, 24px);
+    padding: 10px 0;
 }
 
+/* ČÍSLO KROKU */
 .step-number {
-    width: clamp(60px, 15vw, 80px);
-    height: clamp(60px, 15vw, 80px);
-    min-width: clamp(60px, 15vw, 80px);
+    width: clamp(50px, 12vw, 70px);
+    height: clamp(50px, 12vw, 70px);
+    min-width: clamp(50px, 12vw, 70px);
     background: linear-gradient(135deg, var(--primary), var(--accent));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(24px, 6vw, 32px);
+    font-size: clamp(20px, 5vw, 28px);
     font-weight: 800;
     color: white;
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
     flex-shrink: 0;
 }
 
+/* OTÁZKA */
 .question {
-    font-size: clamp(20px, 5.5vw, 26px);
+    font-size: clamp(18px, 4.5vw, 24px);
     font-weight: 800;
     line-height: 1.4;
     color: var(--text);
     max-width: 100%;
-    padding: 0 10px;
+    padding: 0 5px;
     flex-shrink: 0;
 }
 
+/* ============================================
+   TLÁČIDLÁ WIZARDU - RESPONSÍVNY GRID LAYOUT
+   ============================================ */
 .wizard-buttons {
-    display: flex;
-    flex-direction: row;
-    gap: clamp(12px, 3vw, 16px);
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
     width: 100%;
+    max-width: 400px;
     margin-top: auto;
-    padding-top: clamp(20px, 5vh, 30px);
+    padding-top: 10px;
 }
 
+/* ÁNO a NIE - prvý riadok, vedľa seba */
 .btn-yes,
-.btn-no,
-.btn-back,
-.btn-restart,
-.btn-export-path {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: clamp(16px, 4vw, 20px) clamp(24px, 6vw, 32px);
+.btn-no {
+    grid-row: 1;
+    min-height: clamp(52px, 10vh, 60px);
+    padding: clamp(14px, 3vw, 18px) clamp(20px, 4vw, 28px);
     border: none;
     border-radius: var(--radius-sm);
-    font-size: clamp(16px, 4.5vw, 18px);
+    font-size: clamp(15px, 4vw, 17px);
     font-weight: 800;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: clamp(120px, 30vw, 140px);
-    min-height: clamp(56px, 12vw, 64px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.btn-icon {
-    font-size: 1.2em;
-    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .btn-yes {
+    grid-column: 2;
     background: linear-gradient(135deg, #22c55e, #16a34a);
     color: white;
-    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
 
 .btn-yes:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.5);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.5);
 }
 
 .btn-no {
+    grid-column: 1;
     background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
-    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
 .btn-no:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
 }
 
+/* SPÄŤ - druhý riadok, cez celú šírku */
 .btn-back {
+    grid-column: 1 / -1;
+    grid-row: 2;
     background: #f1f5f9;
     color: var(--text);
     border: 2px solid #e2e8f0;
+    min-height: clamp(44px, 8vh, 52px);
+    padding: clamp(10px, 2vw, 14px) clamp(16px, 3vw, 24px);
+    border-radius: var(--radius-sm);
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 200px;
+    justify-self: center;
 }
 
 .btn-back:hover {
@@ -1424,28 +1476,13 @@ select {
     transform: translateY(-2px);
 }
 
-.btn-restart {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
-    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+/* IKONY V TLÁČIDLÁCH */
+.btn-icon {
+    font-size: 1.1em;
+    line-height: 1;
 }
 
-.btn-restart:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
-}
-
-.btn-export-path {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-}
-
-.btn-export-path:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
-}
-
+/* VÝSLEDKOVÁ OBRAZOVKA */
 .wizard-result-buttons {
     display: flex;
     flex-direction: row;
@@ -1453,7 +1490,53 @@ select {
     justify-content: center;
     flex-wrap: wrap;
     width: 100%;
-    margin-bottom: clamp(20px, 5vh, 30px);
+    margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+.btn-restart {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: clamp(12px, 3vw, 16px) clamp(20px, 4vw, 28px);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    min-height: clamp(48px, 9vh, 56px);
+}
+
+.btn-restart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.5);
+}
+
+.btn-export-path {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: clamp(12px, 3vw, 16px) clamp(20px, 4vw, 28px);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    min-height: clamp(48px, 9vh, 56px);
+}
+
+.btn-export-path:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
 }
 
 .wizard-result-box {
@@ -1463,36 +1546,15 @@ select {
     align-items: center;
     justify-content: center;
     flex: 1;
+    gap: 20px;
 }
 
-.path-history {
-    background: linear-gradient(135deg, #eff6ff, #dbeafe);
-    border-left: 4px solid var(--primary);
-    padding: clamp(12px, 3vw, 16px);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    margin-bottom: clamp(16px, 4vw, 20px);
-    flex-shrink: 0;
-    text-align: left;
-}
-
-.path-history.hidden {
-    display: none !important;
-}
-
-.path-title {
-    font-size: 0.75em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    font-weight: 800;
-}
-
+/* VÝSLEDOK */
 .result {
     width: 100%;
-    padding: clamp(24px, 6vw, 32px);
+    padding: clamp(20px, 5vw, 28px);
     border-radius: var(--radius);
-    font-size: clamp(18px, 5vw, 22px);
+    font-size: clamp(16px, 4.5vw, 20px);
     font-weight: 700;
     line-height: 1.5;
     text-align: center;
@@ -1563,18 +1625,38 @@ select {
     --edit-visible: block;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE - MOBILNÉ ZARIADENIA ===== */
 @media (max-width: 480px) {
-    .wizard-buttons {
-        flex-direction: column;
+    .wizard {
+        padding: 12px;
         gap: 12px;
     }
     
+    .wizard-buttons {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        max-width: none;
+    }
+    
     .btn-yes,
-    .btn-no,
+    .btn-no {
+        min-height: 56px;
+        font-size: 16px;
+    }
+    
     .btn-back {
-        width: 100%;
-        max-width: 280px;
+        max-width: none;
+        min-height: 48px;
+    }
+    
+    .question {
+        font-size: 18px;
+    }
+    
+    .step-number {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
     }
     
     .wizard-result-buttons {
@@ -1591,6 +1673,29 @@ select {
     
     .admin-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Veľmi malé obrazovky - tlačidlá pod sebou */
+@media (max-width: 360px) {
+    .wizard-buttons {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+    
+    .btn-yes {
+        grid-column: 1;
+        grid-row: 1;
+    }
+    
+    .btn-no {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    
+    .btn-back {
+        grid-column: 1;
+        grid-row: 3;
     }
 }
 
@@ -1635,34 +1740,41 @@ select {
     }
 }
 
+/* Nízka výška obrazovky */
 @media (max-height: 600px) {
     .wizard {
-        padding: 8px;
+        padding: 10px;
+        gap: 12px;
     }
     
     .question {
-        font-size: 0.95em;
+        font-size: 17px;
     }
     
     .wizard-buttons {
-        gap: 6px;
+        gap: 8px;
     }
     
-    .btn-yes, .btn-no, .btn-back, .btn-restart, .btn-export-path {
-        padding: 8px 16px;
-        font-size: 0.85em;
-        min-height: 44px;
+    .btn-yes, .btn-no {
+        min-height: 48px;
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+    
+    .btn-back {
+        min-height: 42px;
+        padding: 10px 16px;
+        font-size: 14px;
     }
     
     .step-number {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         font-size: 18px;
     }
     
     .path-history {
         padding: 8px;
-        margin-bottom: 8px;
     }
 }
 
