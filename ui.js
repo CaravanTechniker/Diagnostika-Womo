@@ -1,4 +1,4 @@
-// UI funkcie
+// UI funkcie - Fixed Version 5.5
 
 function init() {
     updateFlagDisplay();
@@ -23,11 +23,10 @@ function init() {
     const adminSession = sessionStorage.getItem('adminSession');
     if (adminSession === 'true') {
         isAdminLoggedIn = true;
-        document.getElementById('appContainer').classList.add('admin-mode');
+        const appContainer = document.getElementById('appContainer');
+        if (appContainer) appContainer.classList.add('admin-mode');
         const adminPanel = document.getElementById('adminPanel');
-        if (adminPanel) {
-            adminPanel.classList.remove('hidden');
-        }
+        if (adminPanel) adminPanel.classList.remove('hidden');
         updateAdminButton();
     }
 }
@@ -46,7 +45,8 @@ function updateLanguage() {
         searchInput.placeholder = t.search || 'Hľadať...';
     }
 
-    if (!document.getElementById('categoriesView').classList.contains('hidden')) {
+    const categoriesView = document.getElementById('categoriesView');
+    if (categoriesView && !categoriesView.classList.contains('hidden')) {
         renderCategories();
     }
 }
@@ -219,12 +219,11 @@ function setActiveMenu(section) {
 }
 
 function hideAllMainViews() {
-    document.getElementById('categoriesView').classList.add('hidden');
-    document.getElementById('electricView').classList.add('hidden');
-    document.getElementById('diagnosesView').classList.add('hidden');
-    document.getElementById('errorCodesView').classList.add('hidden');
-    document.getElementById('wizardView').classList.add('hidden');
-    document.getElementById('editorView').classList.add('hidden');
+    const views = ['categoriesView', 'electricView', 'diagnosesView', 'errorCodesView', 'wizardView', 'editorView'];
+    views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
     document.body.classList.remove('wizard-active');
 }
 
@@ -260,10 +259,16 @@ function showMainMenu() {
 }
 
 function closeWizard() {
-    if (currentCategory === 'elektro') {
+    const savedCategory = currentCategory;
+    
+    document.body.classList.remove('wizard-active');
+    
+    if (savedCategory === 'elektro') {
         showElectricSubcategories();
+    } else if (savedCategory) {
+        showDiagnoses(savedCategory);
     } else {
-        showDiagnoses(currentCategory);
+        showCategories();
     }
 }
 
@@ -276,6 +281,8 @@ function handleSearchInput(value) {
 
 function renderCategories() {
     const list = document.getElementById('categoriesList');
+    if (!list) return;
+    
     const lang = appData.currentLang;
 
     list.innerHTML = appData.categories.map(cat => {
@@ -289,7 +296,7 @@ function renderCategories() {
             <div class="category-item" onclick="showCategoryContent('${cat.id}')">
                 <div class="category-icon" onclick="editCategoryPhoto('${cat.id}'); event.stopPropagation();">
                     ${iconContent}
-                    <span class="edit-badge">UPRAVIT</span>
+                    <span class="edit-badge">✏️</span>
                 </div>
                 <div class="category-info">
                     <div class="category-name">${t.name}</div>
@@ -311,26 +318,32 @@ function showCategoryContent(categoryId) {
 
 function showElectricSubcategories() {
     hideAllMainViews();
-    document.getElementById('electricView').classList.remove('hidden');
+    
+    const electricView = document.getElementById('electricView');
+    if (electricView) {
+        electricView.classList.remove('hidden');
+    }
 
     const container = document.getElementById('electricSubcategories');
     const electricTitle = document.querySelector('#electricView .categories-title span:last-child');
     if (electricTitle) electricTitle.textContent = getUiText('electricTitle');
 
-    container.innerHTML = CONFIG.ELECTRIC_SUBCATEGORIES.map(sub => {
-        const elektroCat = appData.categories.find(c => c.id === 'elektro');
-        const count = elektroCat && elektroCat.diagnoses ?
-            elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === sub.id).length : 0;
+    if (container) {
+        container.innerHTML = CONFIG.ELECTRIC_SUBCATEGORIES.map(sub => {
+            const elektroCat = appData.categories.find(c => c.id === 'elektro');
+            const count = elektroCat && elektroCat.diagnoses ?
+                elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === sub.id).length : 0;
 
-        return `
-            <div class="subcategory-item" onclick="showElectricTrees('${sub.id}')">
-                <span class="subcategory-icon">${sub.icon}</span>
-                <span class="subcategory-name">${sub.name}</span>
-                <span style="margin-left:auto;color:var(--primary);font-weight:700;font-size:0.85em;">${getTreeCountText(count)}</span>
-                <span style="color:#94a3b8;">›</span>
-            </div>
-        `;
-    }).join('');
+            return `
+                <div class="subcategory-item" onclick="showElectricTrees('${sub.id}')">
+                    <span class="subcategory-icon">${sub.icon}</span>
+                    <span class="subcategory-name">${sub.name}</span>
+                    <span style="margin-left:auto;color:var(--primary);font-weight:700;font-size:0.85em;">${getTreeCountText(count)}</span>
+                    <span style="color:#94a3b8;">›</span>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 function showElectricTrees(subcategoryId) {
@@ -338,28 +351,36 @@ function showElectricTrees(subcategoryId) {
     const elektroCat = appData.categories.find(c => c.id === 'elektro');
     const sub = CONFIG.ELECTRIC_SUBCATEGORIES.find(s => s.id === subcategoryId);
 
-    document.getElementById('electricView').classList.add('hidden');
-    document.getElementById('diagnosesView').classList.remove('hidden');
+    const electricView = document.getElementById('electricView');
+    const diagnosesView = document.getElementById('diagnosesView');
+    
+    if (electricView) electricView.classList.add('hidden');
+    if (diagnosesView) diagnosesView.classList.remove('hidden');
 
-    document.getElementById('currentCategoryName').textContent = `${getUiText('electricTitle')} › ${sub.name}`;
+    const categoryName = document.getElementById('currentCategoryName');
+    if (categoryName) {
+        categoryName.textContent = `${getUiText('electricTitle')} › ${sub ? sub.name : ''}`;
+    }
 
     const list = document.getElementById('diagnosesList');
     const trees = elektroCat && elektroCat.diagnoses ?
         elektroCat.diagnoses.filter(d => TREE_TO_SUBCATEGORY[d.id] === subcategoryId) : [];
 
-    if (trees.length === 0) {
-        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
-    } else {
-        const lang = appData.currentLang;
-        list.innerHTML = trees.map(d => {
-            const dt = d.translations[lang] || d.translations['de'];
-            return `
-                <div class="diagnosis-item" onclick="startWizard('${d.id}')">
-                    <div class="diagnosis-title">${dt.title}</div>
-                    <span style="color:#94a3b8;">›</span>
-                </div>
-            `;
-        }).join('');
+    if (list) {
+        if (trees.length === 0) {
+            list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
+        } else {
+            const lang = appData.currentLang;
+            list.innerHTML = trees.map(d => {
+                const dt = d.translations[lang] || d.translations['de'];
+                return `
+                    <div class="diagnosis-item" onclick="startWizard('${d.id}')">
+                        <div class="diagnosis-title">${dt.title}</div>
+                        <span style="color:#94a3b8;">›</span>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 }
 
@@ -372,30 +393,43 @@ function showDiagnoses(categoryId) {
     const t = cat.translations[lang] || cat.translations['de'];
 
     hideAllMainViews();
-    document.getElementById('diagnosesView').classList.remove('hidden');
+    
+    const diagnosesView = document.getElementById('diagnosesView');
+    if (diagnosesView) {
+        diagnosesView.classList.remove('hidden');
+    }
 
-    document.getElementById('currentCategoryName').textContent = t.name;
+    const categoryName = document.getElementById('currentCategoryName');
+    if (categoryName) {
+        categoryName.textContent = t.name;
+    }
 
     const list = document.getElementById('diagnosesList');
-    if (!cat.diagnoses || cat.diagnoses.length === 0) {
-        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
-    } else {
-        const lang = appData.currentLang;
-        list.innerHTML = cat.diagnoses.map(d => {
-            const dt = d.translations[lang] || d.translations['de'];
-            return `
-                <div class="diagnosis-item" onclick="startWizard('${d.id}')">
-                    <div class="diagnosis-title">${dt.title}</div>
-                    <span style="color:#94a3b8;">›</span>
-                </div>
-            `;
-        }).join('');
+    if (list) {
+        if (!cat.diagnoses || cat.diagnoses.length === 0) {
+            list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noTrees')}</div>`;
+        } else {
+            const lang = appData.currentLang;
+            list.innerHTML = cat.diagnoses.map(d => {
+                const dt = d.translations[lang] || d.translations['de'];
+                return `
+                    <div class="diagnosis-item" onclick="startWizard('${d.id}')">
+                        <div class="diagnosis-title">${dt.title}</div>
+                        <span style="color:#94a3b8;">›</span>
+                    </div>
+                `;
+            }).join('');
+        }
     }
 }
 
 function showCategories() {
     hideAllMainViews();
-    document.getElementById('categoriesView').classList.remove('hidden');
+    
+    const categoriesView = document.getElementById('categoriesView');
+    if (categoriesView) {
+        categoriesView.classList.remove('hidden');
+    }
 
     const categoriesTitle = document.querySelector('#categoriesView [data-translate="categories"]');
     if (categoriesTitle) {
@@ -408,23 +442,41 @@ function showCategories() {
 
 function showErrorCodesSection() {
     hideAllMainViews();
-    document.getElementById('errorCodesView').classList.remove('hidden');
+    
+    const errorCodesView = document.getElementById('errorCodesView');
+    if (errorCodesView) {
+        errorCodesView.classList.remove('hidden');
+    }
 
     const content = document.getElementById('errorCodesContent');
-    content.innerHTML = `
-        <div class="error-search-box">
-            <div style="font-weight:700;margin-bottom:10px;">${getUiText('searchErrorCode')}:</div>
-            <input type="text" id="errorCodeInput" class="error-search-input" placeholder="${getUiText('enterCode')}" maxlength="10">
-            <button class="btn-primary" style="margin-top:10px;" onclick="searchErrorCode(document.getElementById('errorCodeInput').value)">${getUiText('searchButton')}</button>
-        </div>
-        <div id="errorCodeResult"></div>
-    `;
+    if (content) {
+        content.innerHTML = `
+            <div class="error-search-box">
+                <div style="font-weight:700;margin-bottom:10px;">${getUiText('searchErrorCode')}:</div>
+                <input type="text" id="errorCodeInput" class="error-search-input" placeholder="${getUiText('enterCode')}" maxlength="10">
+                <button class="btn-primary" style="margin-top:10px;" onclick="searchErrorCode(document.getElementById('errorCodeInput').value)">${getUiText('searchButton')}</button>
+            </div>
+            <div id="errorCodeResult"></div>
+        `;
+        
+        const input = document.getElementById('errorCodeInput');
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchErrorCode(input.value);
+                }
+            });
+            input.focus();
+        }
+    }
 }
 
 function searchErrorCode(code) {
-    if (!code.trim()) return;
+    if (!code || !code.trim()) return;
 
     const resultDiv = document.getElementById('errorCodeResult');
+    if (!resultDiv) return;
+    
     const found = findErrorCode(code.trim().toUpperCase());
 
     if (found) {
@@ -445,17 +497,17 @@ function searchErrorCode(code) {
                 
                 <div style="margin-bottom:12px;">
                     <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('device')}:</div>
-                    <div style="font-weight:700;">${found.device}</div>
+                    <div style="font-weight:700;">${found.device || 'N/A'}</div>
                 </div>
                 
                 <div style="margin-bottom:12px;">
                     <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('description')}:</div>
-                    <div>${et.description}</div>
+                    <div>${et.description || 'N/A'}</div>
                 </div>
                 
                 <div>
                     <div style="font-size:0.85em;color:var(--muted);margin-bottom:4px;">${getUiText('solution')}:</div>
-                    <div style="background:#f8fbff;padding:12px;border-radius:10px;border-left:3px solid var(--primary);">${et.solution}</div>
+                    <div style="background:#f8fbff;padding:12px;border-radius:10px;border-left:3px solid var(--primary);">${et.solution || 'N/A'}</div>
                 </div>
             </div>
         `;
@@ -466,25 +518,48 @@ function searchErrorCode(code) {
 
 function showDevicesSection() {
     hideAllMainViews();
-    document.getElementById('diagnosesView').classList.remove('hidden');
-    document.getElementById('currentCategoryName').textContent = getUiText('device');
+    
+    const diagnosesView = document.getElementById('diagnosesView');
+    if (diagnosesView) {
+        diagnosesView.classList.remove('hidden');
+    }
+    
+    const categoryName = document.getElementById('currentCategoryName');
+    if (categoryName) {
+        categoryName.textContent = getUiText('device');
+    }
 
-    document.getElementById('diagnosesList').innerHTML = `
-        <div style="text-align:center;padding:40px 20px;color:var(--muted);">
-            ${appData.currentLang === 'sk' ? 'Sekcia zariadení bude doplnená do ďalšej verzie' :
-              appData.currentLang === 'de' ? 'Geraetesektion wird in der naechsten Version ergaenzt' :
-              appData.currentLang === 'en' ? 'Devices section will be added in the next version' :
-              appData.currentLang === 'it' ? 'La sezione dispositivi verra aggiunta nella prossima versione' :
-              appData.currentLang === 'fr' ? 'La section appareils sera ajoutee dans la prochaine version' :
-              'La seccion de dispositivos se agregara en la proxima version'}
-        </div>
-    `;
+    const list = document.getElementById('diagnosesList');
+    if (list) {
+        const messages = {
+            sk: 'Sekcia zariadení bude doplnená do ďalšej verzie',
+            de: 'Geraetesektion wird in der naechsten Version ergaenzt',
+            en: 'Devices section will be added in the next version',
+            it: 'La sezione dispositivi verra aggiunta nella prossima versione',
+            fr: 'La section appareils sera ajoutee dans la prochaine version',
+            es: 'La seccion de dispositivos se agregara en la proxima version'
+        };
+        
+        list.innerHTML = `
+            <div style="text-align:center;padding:40px 20px;color:var(--muted);">
+                ${messages[appData.currentLang] || messages.en}
+            </div>
+        `;
+    }
 }
 
 function showMeasurementsSection() {
     hideAllMainViews();
-    document.getElementById('diagnosesView').classList.remove('hidden');
-    document.getElementById('currentCategoryName').textContent = getUiText('measurementsTitle');
+    
+    const diagnosesView = document.getElementById('diagnosesView');
+    if (diagnosesView) {
+        diagnosesView.classList.remove('hidden');
+    }
+    
+    const categoryName = document.getElementById('currentCategoryName');
+    if (categoryName) {
+        categoryName.textContent = getUiText('measurementsTitle');
+    }
 
     const cards = [
         { icon: '🔋', title: { sk: 'Napätie batérie', de: 'Batteriespannung', en: 'Battery voltage', it: 'Tensione batteria', fr: 'Tension batterie', es: 'Voltaje de bateria' } },
@@ -496,19 +571,21 @@ function showMeasurementsSection() {
     ];
 
     const lang = appData.currentLang;
-
-    document.getElementById('diagnosesList').innerHTML = `
-        <div style="margin-bottom:15px;color:var(--muted);">${getUiText('measurementsIntro')}</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-            ${cards.map(card => `
-                <div class="subcategory-item">
-                    <span style="font-size:1.3em;">${card.icon}</span>
-                    <span style="font-weight:700;">${card.title[lang] || card.title.de}</span>
-                    <span style="margin-left:auto;color:#94a3b8;">›</span>
-                </div>
-            `).join('')}
-        </div>
-    `;
+    const list = document.getElementById('diagnosesList');
+    
+    if (list) {
+        list.innerHTML = `
+            <div style="margin-bottom:15px;color:var(--muted);">${getUiText('measurementsIntro')}</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+                ${cards.map(card => `
+                    <div class="subcategory-item" style="cursor: default;">
+                        <span style="font-size:1.3em;">${card.icon}</span>
+                        <span style="font-weight:700;font-size:0.9em;">${card.title[lang] || card.title.de}</span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
 }
 
 function handleSearch(query, blurAfterSearch = false) {
@@ -540,28 +617,38 @@ function handleSearch(query, blurAfterSearch = false) {
     });
 
     hideAllMainViews();
-    document.getElementById('diagnosesView').classList.remove('hidden');
+    
+    const diagnosesView = document.getElementById('diagnosesView');
+    if (diagnosesView) {
+        diagnosesView.classList.remove('hidden');
+    }
 
     const list = document.getElementById('diagnosesList');
-    document.getElementById('currentCategoryName').textContent = `${getUiText('searchResults')}: "${trimmed}"`;
+    const categoryName = document.getElementById('currentCategoryName');
+    
+    if (categoryName) {
+        categoryName.textContent = `${getUiText('searchResults')}: "${trimmed}"`;
+    }
 
-    if (results.length === 0) {
-        list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noResults')}</div>`;
-    } else {
-        const lang = appData.currentLang;
-        list.innerHTML = results.map(r => {
-            const dt = r.diag.translations[lang] || r.diag.translations['de'];
-            const ct = r.cat.translations[lang] || r.cat.translations['de'];
-            return `
-                <div class="diagnosis-item" onclick="startWizardFromSearch('${r.diag.id}', '${r.cat.id}')">
-                    <div>
-                        <div class="diagnosis-title">${dt.title}</div>
-                        <div style="font-size:0.85em;color:var(--muted);margin-top:2px;">${ct.name}</div>
+    if (list) {
+        if (results.length === 0) {
+            list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:40px 20px;">${getUiText('noResults')}</div>`;
+        } else {
+            const lang = appData.currentLang;
+            list.innerHTML = results.map(r => {
+                const dt = r.diag.translations[lang] || r.diag.translations['de'];
+                const ct = r.cat.translations[lang] || r.cat.translations['de'];
+                return `
+                    <div class="diagnosis-item" onclick="startWizardFromSearch('${r.diag.id}', '${r.cat.id}')">
+                        <div>
+                            <div class="diagnosis-title">${dt.title}</div>
+                            <div style="font-size:0.85em;color:var(--muted);margin-top:2px;">${ct.name}</div>
+                        </div>
+                        <span style="color:#94a3b8;">›</span>
                     </div>
-                    <span style="color:#94a3b8;">›</span>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
     }
 
     if (blurAfterSearch) {
