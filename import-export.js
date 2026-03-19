@@ -1,32 +1,69 @@
 // Import a export funkcie
 
-function openExportModal() {
-    closeAdminModal();
-    document.getElementById('exportModal').classList.add('active');
-    updateExportOptions();
-}
-
-function closeExportModal() {
-    document.getElementById('exportModal').classList.remove('active');
-}
+let currentImportType = null;
+let currentMode = 'import'; // 'import' alebo 'export'
 
 function openImportModal() {
     closeAdminModal();
-    document.getElementById('importModal').classList.add('active');
-    // Reset
+    currentMode = 'import';
+    document.getElementById('importExportModal').classList.add('active');
+    document.getElementById('modalTitle').textContent = '⬆️ Import';
+    
+    // Zobraziť import sekcie, skryť export sekcie
+    document.getElementById('importSection').classList.remove('hidden');
+    document.getElementById('exportSection').classList.add('hidden');
+    document.getElementById('importExportBtn').textContent = 'Importovať';
+    document.getElementById('importExportBtn').onclick = processImport;
+    
+    // Reset formulára
+    resetImportForm();
+}
+
+function openExportModal() {
+    closeAdminModal();
+    currentMode = 'export';
+    document.getElementById('importExportModal').classList.add('active');
+    document.getElementById('modalTitle').textContent = '⬇️ Export';
+    
+    // Skryť import sekcie, zobraziť export sekcie
+    document.getElementById('importSection').classList.add('hidden');
+    document.getElementById('exportSection').classList.remove('hidden');
+    document.getElementById('importExportBtn').textContent = '📋 Kopírovať do schránky';
+    document.getElementById('importExportBtn').onclick = processExport;
+    
+    updateExportOptions();
+}
+
+function closeImportExportModal() {
+    document.getElementById('importExportModal').classList.remove('active');
+}
+
+function resetImportForm() {
     document.getElementById('importBrandSection').classList.add('hidden');
     document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
     document.getElementById('importJson').value = '';
-    document.getElementById('selectedImportType').value = '';
-}
-
-function closeImportModal() {
-    document.getElementById('importModal').classList.remove('active');
+    document.getElementById('importAction').value = 'new';
+    document.getElementById('importFile').value = '';
+    
+    currentImportType = null;
+    const hiddenInput = document.getElementById('selectedImportType');
+    if (hiddenInput) hiddenInput.value = '';
 }
 
 function selectImportType(type) {
     document.querySelectorAll('.import-type-btn').forEach(btn => btn.classList.remove('selected'));
-    event.currentTarget.classList.add('selected');
+    
+    const buttons = document.querySelectorAll('.import-type-btn');
+    buttons.forEach(btn => {
+        const onclick = btn.getAttribute('onclick') || '';
+        if (onclick.indexOf("'" + type + "'") !== -1 || onclick.indexOf('"' + type + '"') !== -1) {
+            btn.classList.add('selected');
+        }
+    });
+    
+    currentImportType = type;
+    const hiddenInput = document.getElementById('selectedImportType');
+    if (hiddenInput) hiddenInput.value = type;
 
     const brandSection = document.getElementById('importBrandSection');
     
@@ -36,9 +73,6 @@ function selectImportType(type) {
     } else {
         brandSection.classList.add('hidden');
     }
-    
-    // Uložíme typ pre processImport
-    document.getElementById('selectedImportType').value = type;
 }
 
 function handleImportFile(event) {
@@ -48,6 +82,10 @@ function handleImportFile(event) {
     const reader = new FileReader();
     reader.onload = function(e) {
         document.getElementById('importJson').value = e.target.result;
+        showNotification('Súbor načítaný');
+    };
+    reader.onerror = function() {
+        showNotification('Chyba pri čítaní súboru', 'error');
     };
     reader.readAsText(file);
 }
@@ -55,18 +93,20 @@ function handleImportFile(event) {
 function processImport() {
     const jsonText = document.getElementById('importJson').value.trim();
     if (!jsonText) {
-        showNotification('Vložte JSON kód', 'error');
+        showNotification('Vložte JSON kód alebo vyberte súbor', 'error');
         return;
     }
 
-    const type = document.getElementById('selectedImportType').value || 'complete';
+    const type = currentImportType || document.getElementById('selectedImportType').value || 'tree';
     const action = document.getElementById('importAction').value;
 
     try {
         const data = JSON.parse(jsonText);
+        
+        console.log('Import type:', type, 'Action:', action);
 
         if (type === 'tree') {
-            importTree(data, action);
+            importTreeData(data, action);
         } else if (type === 'error') {
             importErrors(data, action);
         } else if (type === 'manual') {
@@ -74,14 +114,15 @@ function processImport() {
         } else if (type === 'photo') {
             importPhotos(data, action);
         } else {
-            importComplete(data, action);
+            importTreeData(data, action);
         }
 
         saveDataToStorage();
-        closeImportModal();
+        closeImportExportModal();
         showNotification('Import úspešný');
 
         if (typeof renderCategories === 'function') renderCategories();
+        if (typeof populateExportSelects === 'function') populateExportSelects();
 
     } catch (e) {
         showNotification('Chyba v JSON: ' + e.message, 'error');
@@ -89,92 +130,60 @@ function processImport() {
     }
 }
 
-function importTree(data, action) {
-    if (!data.id || !data.translations) {
-        throw new Error('Neplatný formát stromu - chýba id alebo translations');
+function importTreeData(data, action) {
+    if (!data.id) {
+        throw new Error('Chýba ID stromu (data.id)');
+    }
+    
+    if (!data.translations) {
+        throw new Error('Chýbajú preklady (data.translations)');
     }
 
-    // Nájdeme cieľovú kategóriu
     let category = null;
     
-    // Ak strom má categoryId a existuje, použijeme ju
     if (data.categoryId) {
         category = appData.categories.find(c => c.id === data.categoryId);
     }
     
-    // Ak nie je categoryId alebo neexistuje, použijeme elektro ako default
     if (!category) {
-        // Skúsime nájsť podľa TREE_TO_SUBCATEGORY mapovania
-        const subcategoryId = TREE_TO_SUBCATEGORY[data.id];
-        if (subcategoryId) {
-            category = appData.categories.find(c => c.id === 'elektro');
-        }
-    }
-    
-    // Ak stále nemáme kategóriu, použijeme prvú
-    if (!category) {
-        category = appData.categories[0];
+        category = appData.categories.find(c => c.id === 'elektro') || appData.categories[0];
     }
 
-    if (!category.diagnoses) category.diagnoses = [];
+    if (!category) {
+        throw new Error('Žiadna kategória nie je k dispozícii');
+    }
 
-    // Kontrola či strom už existuje
+    if (!category.diagnoses) {
+        category.diagnoses = [];
+    }
+
     const existingIndex = category.diagnoses.findIndex(d => d.id === data.id);
-    const exists = existingIndex >= 0;
 
-    // Vykonáme akciu podľa výberu
-    if (action === 'replace' && exists) {
-        // Nahradíme existujúci strom
+    if (action === 'replace' && existingIndex >= 0) {
         category.diagnoses[existingIndex] = data;
-        showNotification('Strom bol nahradený');
-        
-    } else if (action === 'merge' && exists) {
-        // Spojíme kroky existujúceho a nového stromu
+        console.log('Strom nahradený:', data.id);
+    } else if (action === 'merge' && existingIndex >= 0) {
         const existing = category.diagnoses[existingIndex];
-        
-        // Merge translations
-        Object.keys(data.translations).forEach(lang => {
-            if (!existing.translations[lang]) {
-                existing.translations[lang] = data.translations[lang];
-            } else {
-                // Merge steps a results
-                if (data.translations[lang].steps) {
-                    existing.translations[lang].steps = {
-                        ...existing.translations[lang].steps,
-                        ...data.translations[lang].steps
-                    };
-                }
-                if (data.translations[lang].results) {
-                    existing.translations[lang].results = {
-                        ...existing.translations[lang].results,
-                        ...data.translations[lang].results
-                    };
-                }
-            }
-        });
-        
-        // Merge root properties
-        if (data.steps) {
-            existing.steps = { ...existing.steps, ...data.steps };
+        existing.steps = { ...existing.steps, ...data.steps };
+        existing.results = { ...existing.results, ...data.results };
+        if (data.translations) {
+            Object.keys(data.translations).forEach(lang => {
+                if (!existing.translations[lang]) existing.translations[lang] = {};
+                existing.translations[lang] = { 
+                    ...existing.translations[lang], 
+                    ...data.translations[lang] 
+                };
+            });
         }
-        if (data.results) {
-            existing.results = { ...existing.results, ...data.results };
+        console.log('Strom spojený:', data.id);
+    } else {
+        if (existingIndex >= 0) {
+            const newId = data.id + '_import_' + Date.now();
+            console.log('Duplicitné ID, zmenené na:', newId);
+            data.id = newId;
         }
-        
-        showNotification('Strom bol spojený s existujúcim');
-        
-    } else if (action === 'new' || !exists) {
-        // Pridáme ako nový strom (alebo ak neexistuje pri replace/merge)
-        if (exists && action === 'new') {
-            // Vygenerujeme nové ID aby sme predišli konfliktu
-            data.id = data.id + '-import-' + Date.now();
-        }
-        
-        // Uistíme sa že máme správne categoryId
-        data.categoryId = category.id;
-        
         category.diagnoses.push(data);
-        showNotification('Nový strom bol pridaný');
+        console.log('Nový strom pridaný:', data.id);
     }
 }
 
@@ -187,50 +196,54 @@ function importErrors(data, action) {
         appData.errorCodes[brand] = [];
     }
 
+    let newCodes = [];
     if (Array.isArray(data)) {
-        if (action === 'replace') {
-            appData.errorCodes[brand] = data;
-        } else {
-            // Merge - pridáme len nové kódy
-            const existingCodes = new Set(appData.errorCodes[brand].map(e => e.code));
-            const newCodes = data.filter(e => !existingCodes.has(e.code));
-            appData.errorCodes[brand] = [...appData.errorCodes[brand], ...newCodes];
-        }
+        newCodes = data;
+    } else if (data.codes && Array.isArray(data.codes)) {
+        newCodes = data.codes;
+    } else if (data.code) {
+        newCodes = [data];
     } else {
-        // Single error code
-        const existingIndex = appData.errorCodes[brand].findIndex(e => e.code === data.code);
-        if (existingIndex >= 0 && action === 'replace') {
-            appData.errorCodes[brand][existingIndex] = data;
-        } else if (existingIndex < 0) {
-            appData.errorCodes[brand].push(data);
-        }
+        throw new Error('Neplatný formát chybových kódov');
+    }
+
+    if (action === 'replace') {
+        appData.errorCodes[brand] = newCodes;
+    } else {
+        newCodes.forEach(code => {
+            const existingIndex = appData.errorCodes[brand].findIndex(c => c.code === code.code);
+            if (existingIndex >= 0) {
+                appData.errorCodes[brand][existingIndex] = code;
+            } else {
+                appData.errorCodes[brand].push(code);
+            }
+        });
     }
 }
 
 function importManual(data, action) {
     const brand = document.querySelector('#importBrandGrid .selected')?.dataset.brand || 'other';
 
+    if (!window.MANUALS_DATA) window.MANUALS_DATA = {};
     if (!MANUALS_DATA[brand]) {
         MANUALS_DATA[brand] = { name: brand, items: [] };
     }
 
+    let newItems = [];
     if (Array.isArray(data)) {
-        if (action === 'replace') {
-            MANUALS_DATA[brand].items = data;
-        } else {
-            // Merge podľa URL alebo title
-            const existingUrls = new Set(MANUALS_DATA[brand].items.map(i => i.url || i.title));
-            const newItems = data.filter(i => !existingUrls.has(i.url || i.title));
-            MANUALS_DATA[brand].items = [...MANUALS_DATA[brand].items, ...newItems];
-        }
+        newItems = data;
+    } else if (data.items && Array.isArray(data.items)) {
+        newItems = data.items;
+    } else if (data.title && data.url) {
+        newItems = [data];
     } else {
-        // Single manual
-        const exists = MANUALS_DATA[brand].items.some(i => 
-            (i.url && i.url === data.url) || (i.title && i.title === data.title)
-        );
-        if (!exists) {
-            MANUALS_DATA[brand].items.push(data);
-        }
+        throw new Error('Neplatný formát manuálu');
+    }
+
+    if (action === 'replace') {
+        MANUALS_DATA[brand].items = newItems;
+    } else {
+        MANUALS_DATA[brand].items = [...MANUALS_DATA[brand].items, ...newItems];
     }
 }
 
@@ -238,85 +251,28 @@ function importPhotos(data, action) {
     if (!data || typeof data !== 'object') {
         throw new Error('Neplatný formát fotiek');
     }
+
+    if (data.logoPhoto) {
+        appData.logoPhoto = data.logoPhoto;
+        if (typeof updateLogoDisplay === 'function') updateLogoDisplay();
+    }
     
-    if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
-    if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
-    if (data.headerPhoto) appData.headerPhoto = data.headerPhoto;
+    if (data.contactPhoto) {
+        appData.contactPhoto = data.contactPhoto;
+        if (typeof updateContactDisplay === 'function') updateContactDisplay();
+    }
     
     if (data.categoryPhotos && typeof data.categoryPhotos === 'object') {
         Object.entries(data.categoryPhotos).forEach(([catId, photo]) => {
             const cat = appData.categories.find(c => c.id === catId);
-            if (cat) cat.iconPhoto = photo;
+            if (cat) {
+                cat.iconPhoto = photo;
+            }
         });
+        if (typeof renderCategories === 'function') renderCategories();
     }
     
-    // Aktualizujeme zobrazenie
     if (typeof loadPhotos === 'function') loadPhotos();
-    if (typeof updateLogoDisplay === 'function') updateLogoDisplay();
-}
-
-function importComplete(data, action) {
-    if (!data || typeof data !== 'object') {
-        throw new Error('Neplatný formát dát');
-    }
-    
-    if (action === 'replace') {
-        // Nahradíme všetko, ale zachováme štruktúru
-        if (data.categories) {
-            data.categories.forEach(newCat => {
-                const existing = appData.categories.find(c => c.id === newCat.id);
-                if (existing) {
-                    existing.diagnoses = newCat.diagnoses || [];
-                    existing.iconPhoto = newCat.iconPhoto || existing.iconPhoto;
-                    if (newCat.eblBrands) existing.eblBrands = newCat.eblBrands;
-                } else {
-                    appData.categories.push(newCat);
-                }
-            });
-        }
-        if (data.errorCodes) appData.errorCodes = data.errorCodes;
-        if (data.languages) appData.languages = data.languages;
-        if (data.currentLang) appData.currentLang = data.currentLang;
-        if (data.logoPhoto) appData.logoPhoto = data.logoPhoto;
-        if (data.contactPhoto) appData.contactPhoto = data.contactPhoto;
-        if (data.headerPhoto) appData.headerPhoto = data.headerPhoto;
-        
-    } else {
-        // Merge - pridáme len nové veci
-        if (data.categories) {
-            data.categories.forEach(newCat => {
-                const existing = appData.categories.find(c => c.id === newCat.id);
-                if (existing) {
-                    // Merge diagnóz
-                    if (newCat.diagnoses) {
-                        newCat.diagnoses.forEach(newDiag => {
-                            const exists = existing.diagnoses?.find(d => d.id === newDiag.id);
-                            if (!exists) {
-                                if (!existing.diagnoses) existing.diagnoses = [];
-                                existing.diagnoses.push(newDiag);
-                            }
-                        });
-                    }
-                } else {
-                    appData.categories.push(newCat);
-                }
-            });
-        }
-        
-        // Merge error codes
-        if (data.errorCodes) {
-            if (!appData.errorCodes) appData.errorCodes = {};
-            Object.entries(data.errorCodes).forEach(([brand, codes]) => {
-                if (!appData.errorCodes[brand]) {
-                    appData.errorCodes[brand] = codes;
-                } else {
-                    const existingCodes = new Set(appData.errorCodes[brand].map(e => e.code));
-                    const newCodes = codes.filter(e => !existingCodes.has(e.code));
-                    appData.errorCodes[brand] = [...appData.errorCodes[brand], ...newCodes];
-                }
-            });
-        }
-    }
 }
 
 function updateExportOptions() {
@@ -324,35 +280,35 @@ function updateExportOptions() {
     const selectSection = document.getElementById('exportSelectSection');
     const brandSection = document.getElementById('exportBrandSection');
 
-    selectSection?.classList.add('hidden');
-    brandSection?.classList.add('hidden');
+    if (selectSection) selectSection.classList.add('hidden');
+    if (brandSection) brandSection.classList.add('hidden');
 
     if (type === 'category') {
-        selectSection?.classList.remove('hidden');
+        if (selectSection) selectSection.classList.remove('hidden');
         const select = document.getElementById('exportSelect');
         if (select) {
             select.innerHTML = appData.categories.map(cat => {
-                const t = cat.translations[appData.currentLang] || cat.translations.de;
-                return `<option value="${cat.id}">${t.name}</option>`;
+                const t = cat.translations[appData.currentLang] || cat.translations.de || { name: cat.id };
+                return '<option value="' + cat.id + '">' + t.name + '</option>';
             }).join('');
         }
     } else if (type === 'tree') {
-        selectSection?.classList.remove('hidden');
+        if (selectSection) selectSection.classList.remove('hidden');
         const select = document.getElementById('exportSelect');
         if (select) {
             let options = '';
             appData.categories.forEach(cat => {
                 if (cat.diagnoses) {
                     cat.diagnoses.forEach(diag => {
-                        const t = diag.translations[appData.currentLang] || diag.translations.de;
-                        options += `<option value="${cat.id}:${diag.id}">${t.title}</option>`;
+                        const t = diag.translations[appData.currentLang] || diag.translations.de || { title: diag.id };
+                        options += '<option value="' + cat.id + ':' + diag.id + '">' + (t.title || diag.id) + '</option>';
                     });
                 }
             });
-            select.innerHTML = options;
+            select.innerHTML = options || '<option value="">Žiadne stromy</option>';
         }
     } else if (type === 'errors' || type === 'manuals') {
-        brandSection?.classList.remove('hidden');
+        if (brandSection) brandSection.classList.remove('hidden');
         initBrandGrid('exportBrandGrid');
     }
 }
@@ -371,56 +327,59 @@ function processExport() {
             data = { 
                 categories: appData.categories.map(c => ({ 
                     id: c.id, 
-                    diagnoses: c.diagnoses 
+                    diagnoses: c.diagnoses || [] 
                 })) 
             };
             break;
-        case 'errors':
+        case 'errors': {
             const errorBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = errorBrand ? { [errorBrand]: appData.errorCodes[errorBrand] } : appData.errorCodes;
+            data = errorBrand ? { [errorBrand]: appData.errorCodes?.[errorBrand] || [] } : (appData.errorCodes || {});
             break;
-        case 'manuals':
+        }
+        case 'manuals': {
             const manualBrand = document.querySelector('#exportBrandGrid .selected')?.dataset.brand;
-            data = manualBrand ? { [manualBrand]: MANUALS_DATA[manualBrand] } : MANUALS_DATA;
+            data = manualBrand ? { [manualBrand]: window.MANUALS_DATA?.[manualBrand] } : (window.MANUALS_DATA || {});
             break;
+        }
         case 'photos':
             data = {
                 logoPhoto: appData.logoPhoto,
                 contactPhoto: appData.contactPhoto,
-                headerPhoto: appData.headerPhoto,
                 categoryPhotos: {}
             };
             appData.categories.forEach(c => {
                 if (c.iconPhoto) data.categoryPhotos[c.id] = c.iconPhoto;
             });
             break;
-        case 'category':
+        case 'category': {
             const catId = document.getElementById('exportSelect')?.value;
             const cat = appData.categories.find(c => c.id === catId);
-            data = cat;
+            data = cat || {};
             break;
-        case 'tree':
-            const selectValue = document.getElementById('exportSelect')?.value;
-            if (selectValue) {
-                const [treeCatId, treeId] = selectValue.split(':');
-                const treeCat = appData.categories.find(c => c.id === treeCatId);
-                data = treeCat?.diagnoses?.find(d => d.id === treeId);
-            }
+        }
+        case 'tree': {
+            const value = document.getElementById('exportSelect')?.value || '';
+            const parts = value.split(':');
+            const treeCatId = parts[0];
+            const treeId = parts[1];
+            const treeCat = appData.categories.find(c => c.id === treeCatId);
+            data = treeCat?.diagnoses?.find(d => d.id === treeId) || {};
             break;
+        }
     }
 
     const jsonString = format === 'pretty' ? JSON.stringify(data, null, 2) : JSON.stringify(data);
 
-    const exportResult = document.getElementById('exportResult');
-    if (exportResult) {
-        exportResult.textContent = jsonString;
+    const resultDiv = document.getElementById('exportResult');
+    if (resultDiv) {
+        resultDiv.textContent = jsonString;
     }
 
     navigator.clipboard.writeText(jsonString).then(() => {
         showNotification('Skopírované do schránky');
     }).catch(err => {
         console.error('Clipboard error:', err);
-        showNotification('Chyba pri kopírovaní', 'error');
+        showNotification('Skopírujte manuálne', 'error');
     });
 }
 
@@ -435,7 +394,7 @@ function downloadExport() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `diagnostika-export-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = 'diagnostika-export-' + new Date().toISOString().split('T')[0] + '.json';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
