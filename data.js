@@ -1,12 +1,4 @@
-// Globálne premenné - ODSTRÁNENÉ DUPLICITNÉ DEKLARÁCIE
-// Tieto sú definované v app.js:
-// let currentPhotoData = null;
-// let currentPhotoTargetType = null;
-// let currentPhotoTargetId = null;
-// let isAdminLoggedIn = false;
-// let isEditMode = false;
-// let currentCategory = null;
-
+// Globálne premenné
 let appData = loadDataFromStorage();
 let currentDiagnosis = null;
 let currentStep = 0;
