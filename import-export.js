@@ -5,7 +5,9 @@ function openExportModal() {
     if (adminPanel) {
         adminPanel.classList.add('hidden');
     }
-    updateAdminButton();
+    if (typeof updateAdminButton === 'function') {
+        updateAdminButton();
+    }
     
     const modal = document.getElementById('exportModal');
     if (modal) {
@@ -26,7 +28,9 @@ function openImportModal() {
     if (adminPanel) {
         adminPanel.classList.add('hidden');
     }
-    updateAdminButton();
+    if (typeof updateAdminButton === 'function') {
+        updateAdminButton();
+    }
     
     const modal = document.getElementById('importModal');
     if (modal) {
@@ -455,5 +459,10 @@ function selectBrand(brandId, gridId) {
     const selectedBtn = grid.querySelector(`.brand-btn[data-brand="${brandId}"]`);
     if (selectedBtn) {
         selectedBtn.classList.add('selected');
+    }
+    
+    const selectedBrandInput = document.getElementById('selectedBrand');
+    if (selectedBrandInput) {
+        selectedBrandInput.value = brandId;
     }
 }
