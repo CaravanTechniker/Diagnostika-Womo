@@ -299,19 +299,19 @@
             </div>
 
             <div class="import-type-grid">
-                <div class="import-type-btn" onclick="selectImportType('tree', this)">
+                <div class="import-type-btn" onclick="selectImportType('tree')">
                     <div class="import-type-icon">🌳</div>
                     <div class="import-type-label">Strom</div>
                 </div>
-                <div class="import-type-btn" onclick="selectImportType('error', this)">
+                <div class="import-type-btn" onclick="selectImportType('error')">
                     <div class="import-type-icon">🔧</div>
                     <div class="import-type-label">Chyby</div>
                 </div>
-                <div class="import-type-btn" onclick="selectImportType('manual', this)">
+                <div class="import-type-btn" onclick="selectImportType('manual')">
                     <div class="import-type-icon">📚</div>
                     <div class="import-type-label">Manuál</div>
                 </div>
-                <div class="import-type-btn" onclick="selectImportType('photo', this)">
+                <div class="import-type-btn" onclick="selectImportType('photo')">
                     <div class="import-type-icon">🖼️</div>
                     <div class="import-type-label">Fotky</div>
                 </div>
@@ -427,9 +427,9 @@
         <span>Spätná väzba</span>
     </button>
 
-    <!-- Hidden inputs -->
-    <input type="hidden" id="selectedImportType">
-    <input type="hidden" id="selectedBrand">
+    <!-- Hidden Inputs -->
+    <input type="hidden" id="selectedImportType" value="">
+    <input type="hidden" id="selectedBrand" value="">
 
     <!-- Scripts -->
     <script src="config.js"></script>
