@@ -159,7 +159,7 @@ const TREE_TO_SUBCATEGORY = {
     'ebl_vnutorna_cesta_spalena': 'ebl'
 };
 
-// Manuály dáta - PRIDANÉ
+// Manuály dáta
 const MANUALS_DATA = {
     truma: { name: 'Truma', items: [] },
     thetford: { name: 'Thetford', items: [] },
