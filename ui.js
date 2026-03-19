@@ -259,7 +259,6 @@ function showMainMenu() {
     showSection('diagnostic');
 }
 
-// PRIDANÉ: Funkcia pre zatvorenie wizardu
 function closeWizard() {
     if (currentCategory === 'elektro') {
         showElectricSubcategories();
@@ -268,9 +267,7 @@ function closeWizard() {
     }
 }
 
-// PRIDANÉ: Funkcia pre spracovanie vstupu z vyhľadávania
 function handleSearchInput(value) {
-    // Voláme handleSearch s oneskorením pre lepší UX
     clearTimeout(window.searchTimeout);
     window.searchTimeout = setTimeout(() => {
         handleSearch(value, false);
