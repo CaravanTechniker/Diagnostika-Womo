@@ -7,6 +7,12 @@ let currentPhotoTargetId = null;
 let isAdminLoggedIn = false;
 let isEditMode = false;
 let currentCategory = null;
+// PRIDANÉ - chýbajúce premenné:
+let currentDiagnosis = null;
+let currentStep = 0;
+let pathHistory = [];
+let currentEditingTree = null;
+let currentSection = 'diagnostic';
 
 // ===== JAZYKOVÉ FUNKCIE =====
 function updateLanguage() {
@@ -36,7 +42,9 @@ function updateLanguage() {
 function toggleAdmin() {
     if (isAdminLoggedIn) {
         const panel = document.getElementById('adminPanel');
-        panel.classList.toggle('hidden');
+        if (panel) {
+            panel.classList.toggle('hidden');
+        }
         updateAdminButton();
     } else {
         openPasswordModal();
@@ -46,8 +54,9 @@ function toggleAdmin() {
 function updateAdminButton() {
     const btn = document.getElementById('adminBtn');
     const panel = document.getElementById('adminPanel');
+    if (!btn) return;
 
-    if (isAdminLoggedIn && !panel.classList.contains('hidden')) {
+    if (isAdminLoggedIn && panel && !panel.classList.contains('hidden')) {
         btn.classList.add('active');
     } else {
         btn.classList.remove('active');
@@ -55,38 +64,67 @@ function updateAdminButton() {
 }
 
 function openPasswordModal() {
-    document.getElementById('passwordModal').classList.add('active');
-    document.getElementById('adminPassword').value = '';
-    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
+    const modal = document.getElementById('passwordModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
+    const passInput = document.getElementById('adminPassword');
+    if (passInput) {
+        passInput.value = '';
+        setTimeout(() => passInput.focus(), 100);
+    }
 }
 
 function closePasswordModal() {
-    document.getElementById('passwordModal').classList.remove('active');
+    const modal = document.getElementById('passwordModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function checkPassword() {
-    const input = document.getElementById('adminPassword').value;
-    if (input === CONFIG.ADMIN_PASSWORD) {
+    const input = document.getElementById('adminPassword');
+    if (!input) return;
+    
+    if (input.value === CONFIG.ADMIN_PASSWORD) {
         isAdminLoggedIn = true;
         sessionStorage.setItem('adminSession', 'true');
-        document.getElementById('appContainer').classList.add('admin-mode');
+        
+        const container = document.getElementById('appContainer');
+        if (container) {
+            container.classList.add('admin-mode');
+        }
 
         closePasswordModal();
-        document.getElementById('adminPanel').classList.remove('hidden');
+        
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) {
+            adminPanel.classList.remove('hidden');
+        }
+        
         updateAdminButton();
         updateAdminStatus();
         showNotification('Prihlásený ako admin');
     } else {
         showNotification('Nesprávne heslo!', 'error');
-        document.getElementById('adminPassword').value = '';
+        input.value = '';
     }
 }
 
 function logoutAdmin() {
     isAdminLoggedIn = false;
     sessionStorage.removeItem('adminSession');
-    document.getElementById('appContainer').classList.remove('admin-mode');
-    document.getElementById('adminPanel').classList.add('hidden');
+    
+    const container = document.getElementById('appContainer');
+    if (container) {
+        container.classList.remove('admin-mode');
+    }
+    
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) {
+        adminPanel.classList.add('hidden');
+    }
+    
     updateAdminButton();
     updateAdminStatus();
     showNotification('Odhlásený');
@@ -96,18 +134,21 @@ function toggleEditMode() {
     isEditMode = !isEditMode;
     const container = document.getElementById('appContainer');
     if (isEditMode) {
-        container.classList.add('admin-mode');
+        if (container) container.classList.add('admin-mode');
         showNotification('Edit mód zapnutý');
     } else {
-        container.classList.remove('admin-mode');
+        if (container) container.classList.remove('admin-mode');
         showNotification('Edit mód vypnutý');
     }
 }
 
-// PRIDANÉ: Funkcia pre správu fotiek
 function openPhotoManager() {
     toggleEditMode();
-    closeAdminModal();
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) {
+        adminPanel.classList.add('hidden');
+    }
+    updateAdminButton();
 }
 
 // ===== FOTO EDITOR =====
@@ -131,23 +172,35 @@ function openPhotoEditor(type, id = null) {
     const preview = document.getElementById('photoPreview');
     const placeholder = document.getElementById('photoPlaceholder');
 
-    if (currentPhoto) {
-        preview.src = currentPhoto;
-        preview.classList.add('active');
-        placeholder.classList.add('hidden');
-        currentPhotoData = currentPhoto;
-    } else {
-        preview.classList.remove('active');
-        placeholder.classList.remove('hidden');
-        preview.src = '';
+    if (preview && placeholder) {
+        if (currentPhoto) {
+            preview.src = currentPhoto;
+            preview.classList.add('active');
+            placeholder.classList.add('hidden');
+            currentPhotoData = currentPhoto;
+        } else {
+            preview.classList.remove('active');
+            placeholder.classList.remove('hidden');
+            preview.src = '';
+        }
     }
 
-    document.getElementById('savePhotoBtn').disabled = !currentPhotoData;
-    document.getElementById('photoEditorModal').classList.add('active');
+    const saveBtn = document.getElementById('savePhotoBtn');
+    if (saveBtn) {
+        saveBtn.disabled = !currentPhotoData;
+    }
+    
+    const modal = document.getElementById('photoEditorModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function closePhotoEditor() {
-    document.getElementById('photoEditorModal').classList.remove('active');
+    const modal = document.getElementById('photoEditorModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
     currentPhotoData = null;
     currentPhotoTargetType = null;
     currentPhotoTargetId = null;
@@ -164,11 +217,16 @@ function handlePhotoSelect(event) {
         const preview = document.getElementById('photoPreview');
         const placeholder = document.getElementById('photoPlaceholder');
 
-        preview.src = currentPhotoData;
-        preview.classList.add('active');
-        placeholder.classList.add('hidden');
+        if (preview && placeholder) {
+            preview.src = currentPhotoData;
+            preview.classList.add('active');
+            placeholder.classList.add('hidden');
+        }
 
-        document.getElementById('savePhotoBtn').disabled = false;
+        const saveBtn = document.getElementById('savePhotoBtn');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+        }
     };
     reader.readAsDataURL(file);
 }
@@ -179,11 +237,16 @@ function removeCurrentPhoto() {
     const preview = document.getElementById('photoPreview');
     const placeholder = document.getElementById('photoPlaceholder');
 
-    preview.classList.remove('active');
-    placeholder.classList.remove('hidden');
-    preview.src = '';
+    if (preview && placeholder) {
+        preview.classList.remove('active');
+        placeholder.classList.remove('hidden');
+        preview.src = '';
+    }
 
-    document.getElementById('savePhotoBtn').disabled = true;
+    const saveBtn = document.getElementById('savePhotoBtn');
+    if (saveBtn) {
+        saveBtn.disabled = true;
+    }
 }
 
 function savePhoto() {
@@ -268,11 +331,18 @@ function openContactModal() {
     if (closeContactBtn) closeContactBtn.textContent = ct.closeBtn;
 
     updateContactDisplay();
-    document.getElementById('contactModal').classList.add('active');
+    
+    const modal = document.getElementById('contactModal');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function closeContactModal() {
-    document.getElementById('contactModal').classList.remove('active');
+    const modal = document.getElementById('contactModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function openWhatsApp() {
@@ -292,6 +362,8 @@ function openLangModal() {
     const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
 
+    if (!options) return;
+
     options.innerHTML = Object.entries(appData.languages).map(([code, lang]) => `
         <div class="lang-option ${code === appData.currentLang ? 'selected' : ''}" onclick="setLanguage('${code}')">
             <img src="${CONFIG.FLAG_URLS[code]}" alt="${lang.code}" class="lang-flag">
@@ -302,11 +374,16 @@ function openLangModal() {
         </div>
     `).join('');
 
-    modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function closeLangModal() {
-    document.getElementById('langModal').classList.remove('active');
+    const modal = document.getElementById('langModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function setLanguage(code) {
@@ -336,6 +413,8 @@ function openManualsModal() {
     const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
 
+    if (!options) return;
+
     options.innerHTML = Object.entries(MANUALS_DATA).map(([key, section]) => `
         <div class="lang-option" onclick="openManualSection('${key}')">
             <div class="lang-info">
@@ -345,15 +424,16 @@ function openManualsModal() {
         </div>
     `).join('');
 
-    modal.classList.add('active');
+    if (modal) {
+        modal.classList.add('active');
+    }
 }
 
 function openManualSection(sectionKey) {
-    const modal = document.getElementById('langModal');
     const options = document.getElementById('langOptions');
     const section = MANUALS_DATA[sectionKey];
 
-    if (!section) return;
+    if (!section || !options) return;
 
     if (!section.items.length) {
         options.innerHTML = `
@@ -383,7 +463,6 @@ function openManualSection(sectionKey) {
 
 // ===== NOTIFIKÁCIA =====
 function showNotification(message, type = 'success') {
-    // Odstránime existujúce notifikácie
     document.querySelectorAll('.notification').forEach(n => n.remove());
     
     const notif = document.createElement('div');
@@ -407,6 +486,7 @@ function showNotification(message, type = 'success') {
     `;
     notif.textContent = message;
     document.body.appendChild(notif);
+    
     setTimeout(() => {
         notif.style.opacity = '0';
         notif.style.transform = 'translateX(-50%) translateY(-20px)';
@@ -443,11 +523,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const adminSession = sessionStorage.getItem('adminSession');
     if (adminSession === 'true') {
         isAdminLoggedIn = true;
-        document.getElementById('appContainer').classList.add('admin-mode');
+        
+        const container = document.getElementById('appContainer');
+        if (container) {
+            container.classList.add('admin-mode');
+        }
+        
         const adminPanel = document.getElementById('adminPanel');
         if (adminPanel) {
             adminPanel.classList.remove('hidden');
         }
+        
         updateAdminButton();
         updateAdminStatus();
     }
